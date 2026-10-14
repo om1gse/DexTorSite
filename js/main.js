@@ -44,15 +44,6 @@
     reveals.forEach(function (el) { el.classList.add('in'); });
   }
 
-  /* ---------- Подсветка карточек за курсором ---------- */
-  document.querySelectorAll('.feature, .ms').forEach(function (card) {
-    card.addEventListener('pointermove', function (e) {
-      var r = card.getBoundingClientRect();
-      card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
-      card.style.setProperty('--my', (e.clientY - r.top) + 'px');
-    });
-  });
-
   /* ---------- Счётчики ---------- */
   function formatNum(v, decimals) {
     var s = v.toFixed(decimals);

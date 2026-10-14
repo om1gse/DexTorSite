@@ -347,25 +347,15 @@
     <svg class="arcs" viewBox="0 0 1000 1000" aria-hidden="true">
       <defs>
         <linearGradient id="arcStroke" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#E7E7EC" stop-opacity=".55"/>
-          <stop offset=".45" stop-color="#A6A6BC" stop-opacity=".25"/>
-          <stop offset="1" stop-color="#3B384B" stop-opacity="0"/>
+          <stop offset="0" stop-color="#5A5A6E"/>
+          <stop offset=".5" stop-color="#3B384B"/>
+          <stop offset="1" stop-color="#2C2A3A" stop-opacity="0"/>
         </linearGradient>
-        <radialGradient id="arcFill" cx=".5" cy=".5" r=".5">
-          <stop offset="0" stop-color="#272436" stop-opacity=".9"/>
-          <stop offset="1" stop-color="#16151E" stop-opacity="0"/>
-        </radialGradient>
-        <filter id="arcGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="6"/></filter>
       </defs>
-      <circle cx="560" cy="560" r="430" fill="url(#arcFill)"/>
-      <g class="arc-set">
-        <circle cx="560" cy="560" r="440" stroke="url(#arcStroke)" stroke-width="10" filter="url(#arcGlow)" opacity=".5"/>
-        <circle cx="560" cy="560" r="440" stroke="url(#arcStroke)" stroke-width="1.5"/>
-        <circle cx="600" cy="600" r="360" stroke="url(#arcStroke)" stroke-width="1.2" opacity=".8"/>
-        <circle cx="640" cy="640" r="280" stroke="url(#arcStroke)" stroke-width="8" filter="url(#arcGlow)" opacity=".35"/>
-        <circle cx="640" cy="640" r="280" stroke="url(#arcStroke)" stroke-width="1.2"/>
-        <circle cx="680" cy="680" r="200" stroke="url(#arcStroke)" stroke-width="1" opacity=".6"/>
-      </g>
+      <circle cx="560" cy="560" r="440" stroke="url(#arcStroke)" stroke-width="1.5"/>
+      <circle cx="600" cy="600" r="360" stroke="url(#arcStroke)" stroke-width="1.2"/>
+      <circle cx="640" cy="640" r="280" stroke="url(#arcStroke)" stroke-width="1.2"/>
+      <circle cx="680" cy="680" r="200" stroke="url(#arcStroke)" stroke-width="1"/>
     </svg>
     <div class="container">
       <h2 class="h2 reveal" data-i18n="st.title"><span class="muted">Unplug the USB —</span><br>and leave no trace on the computer.</h2>
