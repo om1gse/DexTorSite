@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Roadmap — DexTor OS</title>
+  <meta name="description" content="DexTor OS roadmap: six phases and 28 milestones — from the security core and DEX to mobile, payments and an enterprise edition.">
+  <meta name="theme-color" content="#0E0F13">
+  <meta property="og:title" content="DexTor OS — secure Web3 access from USB">
+  <meta property="og:description" content="A portable crypto OS: wallet, DEX, staking and messenger on an encrypted USB drive.">
+  <meta property="og:image" content="assets/screens/step-1.png">
+  <link rel="icon" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap&subset=cyrillic" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="page-roadmap">
+
+<!-- Иконки -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-usb" viewBox="0 0 24 24"><rect x="7" y="9" width="10" height="13" rx="2"/><path d="M9 9V3h6v6"/><path d="M11 5.5h.01M13 5.5h.01"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3"/><path d="M21 9h-5a3 3 0 0 0 0 6h5V9z"/><path d="M16 12h.01"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-7"/><path d="M16 7h4v4"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/><path d="M3 17.5l9 5 9-5" opacity=".5"/></symbol>
+    <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M8 12h8"/><circle cx="12" cy="12" r="3.5"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M12 15h5"/></symbol>
+    <symbol id="i-onion" viewBox="0 0 24 24"><path d="M12 3c-1 2-6 5-6 10a6 6 0 0 0 12 0c0-5-5-8-6-10z"/><path d="M12 7c-.6 1.6-3 3.6-3 6.5a3 3 0 0 0 6 0C15 10.6 12.6 8.6 12 7z"/></symbol>
+    <symbol id="i-tor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2"/></symbol>
+    <symbol id="i-disk" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="12" cy="12" r="4"/><path d="M12 12h.01"/></symbol>
+    <symbol id="i-git" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="9" r="2"/><path d="M6 8v8"/><path d="M18 11c0 3-4 3-10.5 6"/></symbol>
+    <symbol id="i-hash" viewBox="0 0 24 24"><path d="M5 9h15M4 15h15M10 3L8 21M16 3l-2 18"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-4 1.5-4-2-6-2.5M15 22v-3.5a3 3 0 0 0-.9-2.4c3-.3 6.1-1.5 6.1-6.6a5.2 5.2 0 0 0-1.4-3.6 4.8 4.8 0 0 0-.1-3.6s-1.1-.3-3.7 1.4a12.6 12.6 0 0 0-6.6 0C5.8 2 4.7 2.3 4.7 2.3a4.8 4.8 0 0 0-.1 3.6A5.2 5.2 0 0 0 3.2 9.5c0 5.1 3.1 6.3 6.1 6.6a3 3 0 0 0-.9 2.4V22"/></symbol>
+    <symbol id="i-telegram" viewBox="0 0 24 24"><path d="M21.5 4.5L2.8 11.4c-.9.4-.9 1.6.1 1.9l4.6 1.5 1.8 5.4c.3.8 1.3 1 1.9.4l2.6-2.5 4.6 3.4c.7.5 1.7.1 1.9-.7L22.9 5.9c.2-1-.5-1.7-1.4-1.4z"/><path d="M7.5 14.8L18 7.5l-7.3 8.2"/></symbol>
+    <symbol id="i-discord" viewBox="0 0 24 24"><path d="M8.5 5.5A15 15 0 0 0 5 6.6C3 9.7 2.4 12.8 2.7 15.8a14 14 0 0 0 4.3 2.2l1-1.6"/><path d="M15.5 5.5A15 15 0 0 1 19 6.6c2 3.1 2.6 6.2 2.3 9.2a14 14 0 0 1-4.3 2.2l-1-1.6"/><path d="M7 16.5c3.2 1.4 6.8 1.4 10 0M7.5 7.3c3-1 6-1 9 0"/><circle cx="9" cy="12.5" r="1.3"/><circle cx="15" cy="12.5" r="1.3"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20" opacity="0"/><path d="M4 4h4.5L20 20h-4.5L4 4z"/><path d="M19.5 4l-6.6 7.4M4.5 20l6.6-7.4"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></symbol>
+  </defs>
+</svg>
+
+<a class="sr-only" href="#main">Skip to content</a>
+
+<!-- ========== Шапка ========== -->
+<header class="site-header" id="top">
+  <div class="container header-inner">
+    <a class="logo" href="index.html" aria-label="DexTor OS — home">
+      <img src="assets/logo.png" alt="DexTor OS" width="216" height="47">
+      <span class="badge">Beta</span>
+    </a>
+    <nav class="nav" aria-label="Main navigation">
+      <a href="index.html#platform" data-i18n="nav.platform">Features</a>
+      <a href="index.html#how" data-i18n="nav.how">How it works</a>
+      <a href="index.html#security" data-i18n="nav.security">Security</a>
+      <a href="roadmap.html" aria-current="page" data-i18n="nav.roadmap">Roadmap</a>
+      <a href="index.html#faq" data-i18n="nav.faq">FAQ</a>
+    </nav>
+    <div class="header-actions">
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="en" aria-pressed="true">EN</button>
+        <button type="button" data-lang="ru" aria-pressed="false">RU</button>
+      </div>
+      <a class="btn btn-primary btn-sm" href="index.html#download"><span data-i18n="cta.download">Download</span> <span class="arrow" aria-hidden="true">→</span></a>
+      <button class="burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="mobile-menu"><span></span></button>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a class="m-link" href="index.html#platform" data-i18n="nav.platform">Features</a>
+  <a class="m-link" href="index.html#how" data-i18n="nav.how">How it works</a>
+  <a class="m-link" href="index.html#security" data-i18n="nav.security">Security</a>
+  <a class="m-link" href="roadmap.html" aria-current="page" data-i18n="nav.roadmap">Roadmap</a>
+  <a class="m-link" href="index.html#faq" data-i18n="nav.faq">FAQ</a>
+  <div class="lang" role="group" aria-label="Language">
+    <button type="button" data-lang="en" aria-pressed="true">EN</button>
+    <button type="button" data-lang="ru" aria-pressed="false">RU</button>
+  </div>
+  <a class="btn btn-primary btn-lg" href="index.html#download"><span data-i18n="cta.downloadWin">Download for Windows</span> <span class="arrow" aria-hidden="true">→</span></a>
+</div>
+
+<main id="main">
+
+  <!-- ========== Hero ========== -->
+  <section class="rp-hero">
+    <div class="container">
+      <span class="eyebrow reveal">Roadmap</span>
+      <h1 class="display reveal" data-delay="1" data-i18n="rp.title"><span class="muted">The road ahead</span><br>for <span class="brand">DexTor&nbsp;OS</span>.</h1>
+      <p class="lead reveal" data-delay="2" data-i18n="rp.lead">From the security core and DEX to mobile, payments and an enterprise edition — six phases, 28 milestones, one secure OS.</p>
+      <div class="rp-stats reveal" data-delay="3">
+        <div><b>6</b><span data-i18n="rp.s1">phases</span></div>
+        <div><b>28</b><span data-i18n="rp.s2">milestones</span></div>
+        <div><b>22</b><span data-i18n="rp.s3">months of development</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Таймлайн ========== -->
+  <section class="rp-timeline" aria-label="Timeline">
+    <div class="container">
+      <div class="gantt reveal">
+        <div class="gantt-head">
+          <span class="eyebrow" data-i18n="rp.tl">Timeline</span>
+          <span class="gantt-note" data-i18n="rp.tlh">Months from the start of development</span>
+        </div>
+        <div class="gantt-scroll">
+          <div class="gantt-body" style="--months:22">
+            <div class="g-axis"><span class="g-label"></span><span class="g-track g-ticks"><span style="grid-column:1">1</span><span style="grid-column:3">3</span><span style="grid-column:6">6</span><span style="grid-column:9">9</span><span style="grid-column:12">12</span><span style="grid-column:15">15</span><span style="grid-column:18">18</span><span style="grid-column:22">22</span></span></div>
+            <div class="g-years" aria-hidden="true"><span class="g-label"></span><span class="g-track"><span class="g-year" style="grid-column:1 / 13" data-i18n="rp.y1">Year 1</span><span class="g-year" style="grid-column:13 / 23" data-i18n="rp.y2">Year 2</span></span></div>
+            <a class="g-row" href="#phase-1" data-phase="1">
+              <span class="g-label"><span class="g-num">01</span><span class="g-t" data-i18n="ph1.t">Security &amp; DEX Core</span></span>
+              <span class="g-track"><span class="g-bar" style="grid-column:1 / 13"><span data-i18n="ph1.m2">Months 1–12</span></span></span>
+            </a>
+            <a class="g-row" href="#phase-2" data-phase="2">
+              <span class="g-label"><span class="g-num">02</span><span class="g-t" data-i18n="ph2.t">Token, Premium &amp; Ecosystem</span></span>
+              <span class="g-track"><span class="g-bar" style="grid-column:13 / 16"><span data-i18n="ph2.m2">Months 13–15</span></span></span>
+            </a>
+            <a class="g-row" href="#phase-3" data-phase="3">
+              <span class="g-label"><span class="g-num">03</span><span class="g-t" data-i18n="ph3.t">DEX &amp; AI Expansion</span></span>
+              <span class="g-track"><span class="g-bar" style="grid-column:12 / 17"><span data-i18n="ph3.m2">Months 12–16</span></span></span>
+            </a>
+            <a class="g-row" href="#phase-4" data-phase="4">
+              <span class="g-label"><span class="g-num">04</span><span class="g-t" data-i18n="ph4.t">Web3, Marketplace &amp; Mobile</span></span>
+              <span class="g-track"><span class="g-bar" style="grid-column:12 / 19"><span data-i18n="ph4.m2">Months 12–18</span></span></span>
+            </a>
+            <a class="g-row" href="#phase-5" data-phase="5">
+              <span class="g-label"><span class="g-num">05</span><span class="g-t" data-i18n="ph5.t">Payments, Messenger &amp; Release Prep</span></span>
+              <span class="g-track"><span class="g-bar" style="grid-column:16 / 23"><span data-i18n="ph5.m2">Months 16–22</span></span></span>
+            </a>
+            <a class="g-row" href="#phase-6" data-phase="6">
+              <span class="g-label"><span class="g-num">06</span><span class="g-t" data-i18n="ph6.t">Enterprise &amp; Scaling</span></span>
+              <span class="g-track"><span class="g-bar" style="grid-column:16 / 19"><span data-i18n="ph6.m2">Months 16–18</span></span></span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Навигация по фазам ========== -->
+  <nav class="phase-nav" aria-label="Phases">
+    <div class="container"><div class="pills">
+        <a class="pill" href="#phase-1" data-phase="1"><span class="pill-n">01</span><span class="pill-t" data-i18n="ph1.t2">Security &amp; DEX Core</span></a>
+        <a class="pill" href="#phase-2" data-phase="2"><span class="pill-n">02</span><span class="pill-t" data-i18n="ph2.t2">Token, Premium &amp; Ecosystem</span></a>
+        <a class="pill" href="#phase-3" data-phase="3"><span class="pill-n">03</span><span class="pill-t" data-i18n="ph3.t2">DEX &amp; AI Expansion</span></a>
+        <a class="pill" href="#phase-4" data-phase="4"><span class="pill-n">04</span><span class="pill-t" data-i18n="ph4.t2">Web3, Marketplace &amp; Mobile</span></a>
+        <a class="pill" href="#phase-5" data-phase="5"><span class="pill-n">05</span><span class="pill-t" data-i18n="ph5.t2">Payments, Messenger &amp; Release Prep</span></a>
+        <a class="pill" href="#phase-6" data-phase="6"><span class="pill-n">06</span><span class="pill-t" data-i18n="ph6.t2">Enterprise &amp; Scaling</span></a>
+    </div></div>
+  </nav>
+
+  <!-- ========== Фазы ========== -->
+  <section class="phases">
+    <div class="container phases-inner">
+      <div class="rail" aria-hidden="true"><span class="rail-fill"></span></div>
+
+      <article class="phase" id="phase-1" data-phase="1">
+        <span class="rail-node" aria-hidden="true"></span>
+        <div class="phase-aside">
+          <span class="phase-big" aria-hidden="true">01</span>
+          <span class="eyebrow"><span data-i18n="ph1.lbl">Phase 1</span></span>
+          <h2 class="phase-title" data-i18n="ph1.t3">Security &amp; DEX Core</h2>
+          <div class="phase-meta"><span class="badge" data-i18n="ph1.m">Months 1–12</span><span class="phase-count" data-i18n="ph1.c">6 milestones</span></div>
+          <p class="phase-sum" data-i18n="ph1.s">The foundation: a hardened Linux OS with built-in crypto tools, a local password vault and the first version of the decentralized exchange.</p>
+        </div>
+        <ul class="ms-grid">
+          <li class="ms reveal" data-delay="0"><span class="ms-id">1.1</span><span class="ms-t" data-i18n="ph1.i1">Linux-based OS with crypto functions</span></li>
+          <li class="ms reveal" data-delay="1"><span class="ms-id">1.2</span><span class="ms-t" data-i18n="ph1.i2">Core security modules integration</span></li>
+          <li class="ms reveal" data-delay="0"><span class="ms-id">1.3</span><span class="ms-t" data-i18n="ph1.i3">Built-in secure local password vault</span></li>
+          <li class="ms reveal" data-delay="1"><span class="ms-id">1.4</span><span class="ms-t" data-i18n="ph1.i4">DEX architecture &amp; smart contracts</span></li>
+          <li class="ms reveal" data-delay="0"><span class="ms-id">1.5</span><span class="ms-t" data-i18n="ph1.i5">Basic decentralized exchange features</span></li>
+          <li class="ms reveal" data-delay="1"><span class="ms-id">1.6</span><span class="ms-t" data-i18n="ph1.i6">Emergency “Kill Password” data-wipe feature</span></li>
+        </ul>
+      </article>
+
+      <article class="phase" id="phase-2" data-phase="2">
+        <span class="rail-node" aria-hidden="true"></span>
+        <div class="phase-aside">
+          <span class="phase-big" aria-hidden="true">02</span>
+          <span class="eyebrow"><span data-i18n="ph2.lbl">Phase 2</span></span>
+          <h2 class="phase-title" data-i18n="ph2.t3">Token, Premium &amp; Ecosystem</h2>
+          <div class="phase-meta"><span class="badge" data-i18n="ph2.m">Months 13–15</span><span class="phase-count" data-i18n="ph2.c">5 milestones</span></div>
+          <p class="phase-sum" data-i18n="ph2.s">The DXTR token launches, premium features arrive and the ecosystem opens up to third-party developers.</p>
+        </div>
+        <ul class="ms-grid">
+          <li class="ms reveal" data-delay="0"><span class="ms-id">2.1</span><span class="ms-t" data-i18n="ph2.i1">DXTR Token launch for staking, payments &amp; governance</span></li>
+          <li class="ms reveal" data-delay="1"><span class="ms-id">2.2</span><span class="ms-t" data-i18n="ph2.i2">Premium features: VPN, AI tools, cloud backups</span></li>
+          <li class="ms reveal" data-delay="0"><span class="ms-id">2.3</span><span class="ms-t" data-i18n="ph2.i3">dApp crowdfunding platform</span></li>
+          <li class="ms reveal" data-delay="1"><span class="ms-id">2.4</span><span class="ms-t" data-i18n="ph2.i4">Developer API for third-party integrations</span></li>
+          <li class="ms reveal" data-delay="0"><span class="ms-id">2.5</span><span class="ms-t" data-i18n="ph2.i5">OS v2 full-feature release</span></li>
+        </ul>
+      </article>
+
+      <article class="phase" id="phase-3" data-phase="3">
+        <span class="rail-node" aria-hidden="true"></span>
+        <div class="phase-aside">
+          <span class="phase-big" aria-hidden="true">03</span>
+          <span class="eyebrow"><span data-i18n="ph3.lbl">Phase 3</span></span>
+          <h2 class="phase-title" data-i18n="ph3.t3">DEX &amp; AI Expansion</h2>
+          <div class="phase-meta"><span class="badge" data-i18n="ph3.m">Months 12–16</span><span class="phase-count" data-i18n="ph3.c">6 milestones</span></div>
+          <p class="phase-sum" data-i18n="ph3.s">The DEX matures with order books and liquidity, while AI starts guarding against phishing and risky contracts.</p>
+        </div>
+        <ul class="ms-grid">
+          <li class="ms reveal" data-delay="0"><span class="ms-id">3.1</span><span class="ms-t" data-i18n="ph3.i1">AI risk assessment (beta)</span></li>
+          <li class="ms reveal" data-delay="1"><span class="ms-id">3.2</span><span class="ms-t" data-i18n="ph3.i2">Order books, liquidity &amp; staking upgrade</span></li>
+          <li class="ms reveal" data-delay="0"><span class="ms-id">3.3</span><span class="ms-t" data-i18n="ph3.i3">AI anti-phishing protection</span></li>
+          <li class="ms reveal" data-delay="1"><span class="ms-id">3.4</span><span class="ms-t" data-i18n="ph3.i4">Sandbox isolated app environment</span></li>
+          <li class="ms reveal" data-delay="0"><span class="ms-id">3.5</span><span class="ms-t" data-i18n="ph3.i5">AI contract audit (beta)</span></li>
+          <li class="ms reveal" data-delay="1"><span class="ms-id">3.6</span><span class="ms-t" data-i18n="ph3.i6">DEX public beta test</span></li>
+        </ul>
+      </article>
+
+      <article class="phase" id="phase-4" data-phase="4">
+        <span class="rail-node" aria-hidden="true"></span>
+        <div class="phase-aside">
+          <span class="phase-big" aria-hidden="true">04</span>
+          <span class="eyebrow"><span data-i18n="ph4.lbl">Phase 4</span></span>
+          <h2 class="phase-title" data-i18n="ph4.t3">Web3, Marketplace &amp; Mobile</h2>
+          <div class="phase-meta"><span class="badge" data-i18n="ph4.m">Months 12–18</span><span class="phase-count" data-i18n="ph4.c">3 milestones</span></div>
+          <p class="phase-sum" data-i18n="ph4.s">DexTor goes beyond the desktop: a decentralized marketplace and a mobile wallet for iOS and Android.</p>
+        </div>
+        <ul class="ms-grid">
+          <li class="ms reveal" data-delay="0"><span class="ms-id">4.1</span><span class="ms-t" data-i18n="ph4.i1">Decentralized crypto asset marketplace</span></li>
+          <li class="ms reveal" data-delay="1"><span class="ms-id">4.2</span><span class="ms-t" data-i18n="ph4.i2">iOS &amp; Android mobile wallet app</span></li>
+          <li class="ms reveal" data-delay="0"><span class="ms-id">4.3</span><span class="ms-t" data-i18n="ph4.i3">AI modules for enhanced security</span></li>
+        </ul>
+      </article>
+
+      <article class="phase" id="phase-5" data-phase="5">
+        <span class="rail-node" aria-hidden="true"></span>
+        <div class="phase-aside">
+          <span class="phase-big" aria-hidden="true">05</span>
+          <span class="eyebrow"><span data-i18n="ph5.lbl">Phase 5</span></span>
+          <h2 class="phase-title" data-i18n="ph5.t3">Payments, Messenger &amp; Release Prep</h2>
+          <div class="phase-meta"><span class="badge" data-i18n="ph5.m">Months 16–22</span><span class="phase-count" data-i18n="ph5.c">4 milestones</span></div>
+          <p class="phase-sum" data-i18n="ph5.s">Everyday crypto: scheduled payments, a decentralized messenger and real-time portfolio monitoring.</p>
+        </div>
+        <ul class="ms-grid">
+          <li class="ms reveal" data-delay="0"><span class="ms-id">5.1</span><span class="ms-t" data-i18n="ph5.i1">Scheduled &amp; conditional payments</span></li>
+          <li class="ms reveal" data-delay="1"><span class="ms-id">5.2</span><span class="ms-t" data-i18n="ph5.i2">Decentralized messenger (alpha)</span></li>
+          <li class="ms reveal" data-delay="0"><span class="ms-id">5.3</span><span class="ms-t" data-i18n="ph5.i3">Real-time price &amp; portfolio monitoring</span></li>
+          <li class="ms reveal" data-delay="1"><span class="ms-id">5.4</span><span class="ms-t" data-i18n="ph5.i4">Marketplace &amp; mobile beta testing</span></li>
+        </ul>
+      </article>
+
+      <article class="phase" id="phase-6" data-phase="6">
+        <span class="rail-node" aria-hidden="true"></span>
+        <div class="phase-aside">
+          <span class="phase-big" aria-hidden="true">06</span>
+          <span class="eyebrow"><span data-i18n="ph6.lbl">Phase 6</span></span>
+          <h2 class="phase-title" data-i18n="ph6.t3">Enterprise &amp; Scaling</h2>
+          <div class="phase-meta"><span class="badge" data-i18n="ph6.m">Months 16–18</span><span class="phase-count" data-i18n="ph6.c">4 milestones</span></div>
+          <p class="phase-sum" data-i18n="ph6.s">DexTor OS for teams and companies: admin tools, compliance services and global growth.</p>
+        </div>
+        <ul class="ms-grid">
+          <li class="ms reveal" data-delay="0"><span class="ms-id">6.1</span><span class="ms-t" data-i18n="ph6.i1">Enterprise OS with admin tools</span></li>
+          <li class="ms reveal" data-delay="1"><span class="ms-id">6.2</span><span class="ms-t" data-i18n="ph6.i2">Premium services: audits, KYC/AML, tax tools</span></li>
+          <li class="ms reveal" data-delay="0"><span class="ms-id">6.3</span><span class="ms-t" data-i18n="ph6.i3">Official dApp marketplace</span></li>
+          <li class="ms reveal" data-delay="1"><span class="ms-id">6.4</span><span class="ms-t" data-i18n="ph6.i4">Global growth, partnerships &amp; community scaling</span></li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <!-- ========== CTA ========== -->
+  <section class="section section-tight section-last">
+    <div class="container">
+      <div class="cta-card reveal">
+        <h2 class="h2" data-i18n="rp.cta">Build the future of <span class="brand">DexTor&nbsp;OS</span> with us.</h2>
+        <p class="lead" data-i18n="rp.ctaLead">Try the beta today and follow the progress in our community.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary btn-lg" href="index.html#download"><svg class="ico" style="width:18px;height:18px"><use href="#i-download"/></svg><span data-i18n="cta.downloadWin">Download for Windows</span> <span class="arrow" aria-hidden="true">→</span></a>
+          <a class="btn btn-secondary btn-lg" href="#"><svg class="ico"><use href="#i-telegram"/></svg><span data-i18n="rp.join">Join the community</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ========== Подвал ========== -->
+<footer class="site-footer" id="contacts">
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="logo" href="index.html#top"><img src="assets/logo.png" alt="DexTor OS" width="216" height="47"></a>
+        <p data-i18n="foot.tag">A portable OS for secure Web3 access. Built for the decentralized future.</p>
+        <div class="socials">
+          <a href="#" aria-label="Email"><svg class="ico"><use href="#i-mail"/></svg></a>
+          <a href="#" aria-label="GitHub"><svg class="ico"><use href="#i-github"/></svg></a>
+          <a href="#" aria-label="Telegram"><svg class="ico"><use href="#i-telegram"/></svg></a>
+          <a href="#" aria-label="Discord"><svg class="ico"><use href="#i-discord"/></svg></a>
+          <a href="#" aria-label="X"><svg class="ico"><use href="#i-x"/></svg></a>
+        </div>
+      </div>
+      <div class="foot-col">
+        <h4 data-i18n="foot.product">Product</h4>
+        <ul>
+          <li><a href="index.html#platform" data-i18n="nav.platform">Features</a></li>
+          <li><a href="index.html#how" data-i18n="nav.how">How it works</a></li>
+          <li><a href="index.html#security" data-i18n="nav.security">Security</a></li>
+          <li><a href="index.html#download" data-i18n="cta.download">Download</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4 data-i18n="foot.res">Resources</h4>
+        <ul>
+          <li><a href="#">White Paper</a></li>
+          <li><a href="roadmap.html">Roadmap</a></li>
+          <li><a href="index.html#faq">FAQ</a></li>
+          <li><a href="#">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4 data-i18n="foot.comm">Community</h4>
+        <ul>
+          <li><a href="#">Telegram</a></li>
+          <li><a href="#">Discord</a></li>
+          <li><a href="#">X</a></li>
+          <li><a href="#">Email</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 DexTor OS</span>
+      <a href="https://dextoros.com">dextoros.com</a>
+    </div>
+  </div>
+</footer>
+
+<script src="js/i18n.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
