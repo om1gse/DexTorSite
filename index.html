@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DexTor OS — безопасный доступ к Web3 с USB</title>
+  <meta name="description" content="DexTor OS — портативная ОС на базе Linux для безопасной работы с криптовалютой. Запуск с USB, полное шифрование, встроенный кошелёк, DEX и мессенджер.">
+  <meta name="theme-color" content="#0E0F13">
+  <meta property="og:title" content="DexTor OS — безопасный доступ к Web3 с USB">
+  <meta property="og:description" content="Портативная крипто-ОС: кошелёк, DEX, стейкинг и мессенджер на зашифрованной флешке.">
+  <meta property="og:image" content="assets/screens/step-1.png">
+  <link rel="icon" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap&subset=cyrillic" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- Иконки -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-usb" viewBox="0 0 24 24"><rect x="7" y="9" width="10" height="13" rx="2"/><path d="M9 9V3h6v6"/><path d="M11 5.5h.01M13 5.5h.01"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V6l7-3z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24"><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3"/><path d="M21 9h-5a3 3 0 0 0 0 6h5V9z"/><path d="M16 12h.01"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 6-7"/><path d="M16 7h4v4"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/><path d="M3 17.5l9 5 9-5" opacity=".5"/></symbol>
+    <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M8 12h8"/><circle cx="12" cy="12" r="3.5"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M12 15h5"/></symbol>
+    <symbol id="i-onion" viewBox="0 0 24 24"><path d="M12 3c-1 2-6 5-6 10a6 6 0 0 0 12 0c0-5-5-8-6-10z"/><path d="M12 7c-.6 1.6-3 3.6-3 6.5a3 3 0 0 0 6 0C15 10.6 12.6 8.6 12 7z"/></symbol>
+    <symbol id="i-tor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2"/></symbol>
+    <symbol id="i-disk" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="12" cy="12" r="4"/><path d="M12 12h.01"/></symbol>
+    <symbol id="i-git" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="9" r="2"/><path d="M6 8v8"/><path d="M18 11c0 3-4 3-10.5 6"/></symbol>
+    <symbol id="i-hash" viewBox="0 0 24 24"><path d="M5 9h15M4 15h15M10 3L8 21M16 3l-2 18"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M9 19c-4 1.5-4-2-6-2.5M15 22v-3.5a3 3 0 0 0-.9-2.4c3-.3 6.1-1.5 6.1-6.6a5.2 5.2 0 0 0-1.4-3.6 4.8 4.8 0 0 0-.1-3.6s-1.1-.3-3.7 1.4a12.6 12.6 0 0 0-6.6 0C5.8 2 4.7 2.3 4.7 2.3a4.8 4.8 0 0 0-.1 3.6A5.2 5.2 0 0 0 3.2 9.5c0 5.1 3.1 6.3 6.1 6.6a3 3 0 0 0-.9 2.4V22"/></symbol>
+    <symbol id="i-telegram" viewBox="0 0 24 24"><path d="M21.5 4.5L2.8 11.4c-.9.4-.9 1.6.1 1.9l4.6 1.5 1.8 5.4c.3.8 1.3 1 1.9.4l2.6-2.5 4.6 3.4c.7.5 1.7.1 1.9-.7L22.9 5.9c.2-1-.5-1.7-1.4-1.4z"/><path d="M7.5 14.8L18 7.5l-7.3 8.2"/></symbol>
+    <symbol id="i-discord" viewBox="0 0 24 24"><path d="M8.5 5.5A15 15 0 0 0 5 6.6C3 9.7 2.4 12.8 2.7 15.8a14 14 0 0 0 4.3 2.2l1-1.6"/><path d="M15.5 5.5A15 15 0 0 1 19 6.6c2 3.1 2.6 6.2 2.3 9.2a14 14 0 0 1-4.3 2.2l-1-1.6"/><path d="M7 16.5c3.2 1.4 6.8 1.4 10 0M7.5 7.3c3-1 6-1 9 0"/><circle cx="9" cy="12.5" r="1.3"/><circle cx="15" cy="12.5" r="1.3"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M4 4l16 16M20 4L4 20" opacity="0"/><path d="M4 4h4.5L20 20h-4.5L4 4z"/><path d="M19.5 4l-6.6 7.4M4.5 20l6.6-7.4"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></symbol>
+  </defs>
+</svg>
+
+<a class="sr-only" href="#main">Перейти к содержимому</a>
+
+<!-- ========== Шапка ========== -->
+<header class="site-header" id="top">
+  <div class="container header-inner">
+    <a class="logo" href="#top" aria-label="DexTor OS — на главную">
+      <img src="assets/logo.png" alt="DexTor OS" width="216" height="47">
+      <span class="badge">Beta</span>
+    </a>
+    <nav class="nav" aria-label="Основная навигация">
+      <a href="#platform" data-i18n="nav.platform">Возможности</a>
+      <a href="#how" data-i18n="nav.how">Как это работает</a>
+      <a href="#security" data-i18n="nav.security">Безопасность</a>
+      <a href="#roadmap" data-i18n="nav.roadmap">Roadmap</a>
+      <a href="#faq" data-i18n="nav.faq">FAQ</a>
+    </nav>
+    <div class="header-actions">
+      <div class="lang" role="group" aria-label="Язык / Language">
+        <button type="button" data-lang="ru" aria-pressed="true">RU</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+      <a class="btn btn-primary btn-sm" href="#download"><span data-i18n="cta.download">Скачать</span> <span class="arrow" aria-hidden="true">→</span></a>
+      <button class="burger" type="button" aria-label="Меню" aria-expanded="false" aria-controls="mobile-menu"><span></span></button>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-menu" id="mobile-menu">
+  <a class="m-link" href="#platform" data-i18n="nav.platform">Возможности</a>
+  <a class="m-link" href="#how" data-i18n="nav.how">Как это работает</a>
+  <a class="m-link" href="#security" data-i18n="nav.security">Безопасность</a>
+  <a class="m-link" href="#roadmap" data-i18n="nav.roadmap">Roadmap</a>
+  <a class="m-link" href="#faq" data-i18n="nav.faq">FAQ</a>
+  <div class="lang" role="group" aria-label="Язык / Language">
+    <button type="button" data-lang="ru" aria-pressed="true">RU</button>
+    <button type="button" data-lang="en" aria-pressed="false">EN</button>
+  </div>
+  <a class="btn btn-primary btn-lg" href="#download"><span data-i18n="cta.downloadWin">Скачать для Windows</span> <span class="arrow" aria-hidden="true">→</span></a>
+</div>
+
+<main id="main">
+
+  <!-- ========== Hero ========== -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <div class="badge-row reveal">
+          <span class="badge" data-i18n="hero.badge1">Портативная крипто-ОС</span>
+          <span class="badge" data-i18n="hero.badge2">Linux · Tor · LUKS</span>
+        </div>
+        <h1 class="display reveal" data-delay="1" data-i18n="hero.title">Безопасный Web3 —<br>в&nbsp;кармане<br>с&nbsp;<span class="brand">DexTor&nbsp;OS</span>.</h1>
+        <p class="lead reveal" data-delay="2" data-i18n="hero.lead">Портативная ОС на&nbsp;базе Linux для работы с&nbsp;криптовалютой. Запускается с&nbsp;USB на&nbsp;любом компьютере, полностью зашифрована — кошелёк, DEX и&nbsp;мессенджер уже внутри.</p>
+        <div class="hero-ctas reveal" data-delay="3">
+          <a class="btn btn-primary btn-lg" href="#download"><span data-i18n="cta.downloadWin">Скачать для Windows</span> <span class="arrow" aria-hidden="true">→</span></a>
+          <a class="btn btn-secondary btn-lg" href="#how"><span data-i18n="cta.tour">Как это работает</span></a>
+        </div>
+        <ul class="hero-meta reveal" data-delay="3">
+          <li><svg class="ico"><use href="#i-usb"/></svg><span data-i18n="meta.usb"><b>8 ГБ</b> флешка</span></li>
+          <li><svg class="ico"><use href="#i-download"/></svg><span data-i18n="meta.size"><b>1,6 ГБ</b> загрузка</span></li>
+          <li><svg class="ico"><use href="#i-clock"/></svg><span data-i18n="meta.time"><b>~10 мин</b> на всё</span></li>
+        </ul>
+      </div>
+
+      <div class="hero-visual reveal" data-delay="2">
+        <div class="app-window">
+          <img src="assets/screens/step-1.png" width="1920" height="1360" alt="Мастер настройки DexTor OS: шаг «Начало»" data-i18n-alt="hero.alt" fetchpriority="high">
+        </div>
+        <div class="float-card" aria-hidden="true">
+          <span class="medal"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg></span>
+          <div>
+            <div class="t" data-i18n="hero.floatT">Образ проверен</div>
+            <div class="s" data-i18n="hero.floatS">Подпись разработчика · SHA-256</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Технологии ========== -->
+  <section class="stack" aria-label="Технологии">
+    <div class="container">
+      <p class="stack-label reveal" data-i18n="stack.label">Построено на проверенных открытых технологиях</p>
+      <div class="stack-row reveal">
+        <div class="stack-item"><svg><use href="#i-terminal"/></svg>Linux</div>
+        <div class="stack-item"><svg><use href="#i-tor"/></svg>Tor</div>
+        <div class="stack-item"><svg><use href="#i-onion"/></svg>Onion</div>
+        <div class="stack-item"><svg><use href="#i-disk"/></svg>LUKS</div>
+        <div class="stack-item"><svg><use href="#i-git"/></svg>Git</div>
+        <div class="stack-item"><svg><use href="#i-hash"/></svg>SHA-256</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Цифры ========== -->
+  <section class="stats" aria-label="DexTor OS в цифрах">
+    <div class="container stats-grid">
+      <div class="stat reveal"><div class="v" data-count="20" data-suffix="+">20+</div><div class="l" data-i18n="stat.1">встроенных модулей безопасности</div></div>
+      <div class="stat reveal" data-delay="1"><div class="v" data-count="99.9" data-suffix="%" data-decimals="1">99,9%</div><div class="l" data-i18n="stat.2">гарантия удаления цифровых следов</div></div>
+      <div class="stat reveal" data-delay="2"><div class="v" data-count="0">0</div><div class="l" data-i18n="stat.3">установок на компьютер — всё работает с&nbsp;USB</div></div>
+      <div class="stat reveal" data-delay="3"><div class="v" data-count="6">6</div><div class="l" data-i18n="stat.4">простых шагов в&nbsp;мастере настройки</div></div>
+    </div>
+  </section>
+
+  <!-- ========== Платформа ========== -->
+  <section class="section" id="platform">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow reveal"><span class="num">01</span><span data-i18n="platform.eyebrow">Платформа</span></span>
+        <h2 class="h2 reveal" data-delay="1" data-i18n="platform.title"><span class="muted">Всё для криптовалюты —</span><br>в одной портативной&nbsp;ОС.</h2>
+        <p class="lead reveal" data-delay="2" data-i18n="platform.lead">Кошелёк, биржа, стейкинг и&nbsp;мессенджер работают в&nbsp;одной защищённой среде. Не&nbsp;нужно собирать десяток приложений и&nbsp;доверять каждому.</p>
+      </div>
+
+      <div class="features">
+        <article class="feature reveal">
+          <div class="ico-tile"><svg class="ico"><use href="#i-wallet"/></svg></div>
+          <h3 data-i18n="f1.t">Кошелёк DexTor</h3>
+          <p data-i18n="f1.d">Мультиподпись и&nbsp;холодное хранение в&nbsp;одном кошельке. Безопасный доступ к&nbsp;мессенджеру, маркетплейсу и&nbsp;DeFi-инструментам.</p>
+          <div class="tags"><span class="tag" data-i18n="f1.tag1">Мультиподпись</span><span class="tag" data-i18n="f1.tag2">Холодное хранение</span></div>
+        </article>
+        <article class="feature reveal" data-delay="1">
+          <div class="ico-tile"><svg class="ico"><use href="#i-usb"/></svg></div>
+          <h3 data-i18n="f2.t">Запуск с USB</h3>
+          <p data-i18n="f2.d">Без установки. Запускайте DexTor OS с&nbsp;флешки на&nbsp;любом устройстве — в&nbsp;отдельном окне или при загрузке ПК — и&nbsp;не&nbsp;оставляйте следов.</p>
+          <div class="tags"><span class="tag" data-i18n="f2.tag1">Без установки</span><span class="tag" data-i18n="f2.tag2">Любой ПК</span></div>
+        </article>
+        <article class="feature reveal" data-delay="2">
+          <div class="ico-tile"><svg class="ico"><use href="#i-chart"/></svg></div>
+          <h3 data-i18n="f3.t">DEX и стейкинг</h3>
+          <p data-i18n="f3.d">Торгуйте и&nbsp;зарабатывайте без посредников. Ваши активы — под вашим контролем, DeFi встроен в&nbsp;систему.</p>
+          <div class="tags"><span class="tag" data-i18n="f3.tag1">Без посредников</span><span class="tag">DeFi</span></div>
+        </article>
+        <article class="feature reveal">
+          <div class="ico-tile"><svg class="ico"><use href="#i-shield"/></svg></div>
+          <h3 data-i18n="f4.t">Многоуровневая защита</h3>
+          <p data-i18n="f4.d">Tor, VPN, изоляция приложений в&nbsp;песочнице и&nbsp;квантово-устойчивое шифрование работают вместе.</p>
+          <div class="tags"><span class="tag">Tor + VPN</span><span class="tag">Sandbox</span></div>
+        </article>
+        <article class="feature reveal" data-delay="1">
+          <div class="ico-tile"><svg class="ico"><use href="#i-scan"/></svg></div>
+          <h3 data-i18n="f5.t">Умная AI-защита</h3>
+          <p data-i18n="f5.d">AI-сканер в&nbsp;реальном времени блокирует фишинговые ссылки и&nbsp;вредоносные смарт-контракты до&nbsp;того, как они до&nbsp;вас доберутся.</p>
+          <div class="tags"><span class="tag" data-i18n="f5.tag1">Антифишинг</span><span class="tag" data-i18n="f5.tag2">Аудит контрактов</span></div>
+        </article>
+        <article class="feature reveal" data-delay="2">
+          <div class="ico-tile"><svg class="ico"><use href="#i-grid"/></svg></div>
+          <h3 data-i18n="f6.t">Всё в одном</h3>
+          <p data-i18n="f6.d">Мессенджер, стейкинг, трейдинг, кошелёк и&nbsp;dApps — всё, что нужно, в&nbsp;одной портативной ОС.</p>
+          <div class="tags"><span class="tag" data-i18n="f6.tag1">Мессенджер</span><span class="tag">dApps</span></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Как это работает ========== -->
+  <section class="section section-tight" id="how">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow reveal"><span class="num">02</span><span data-i18n="how.eyebrow">Как это работает</span></span>
+        <h2 class="h2 reveal" data-delay="1" data-i18n="how.title"><span class="muted">Вставьте. Включите.</span><br>Работайте под защитой.</h2>
+        <p class="lead reveal" data-delay="2" data-i18n="how.lead">Мастер настройки для Windows проведёт через всё сам: проверит компьютер, скачает и&nbsp;проверит образ, подготовит флешку.</p>
+      </div>
+
+      <div class="tour" role="tablist" aria-label="Шаги мастера настройки">
+        <div class="tour-steps reveal">
+          <button class="tour-step" role="tab" aria-selected="true" aria-controls="tour-screens" data-step="0">
+            <span class="dot"><span>1</span><svg viewBox="0 0 24 24"><use href="#i-check"/></svg></span>
+            <span class="t" data-i18n="s1.t">Начало</span>
+            <span class="d" data-i18n="s1.d">Скачайте мастер настройки. Он объяснит, что будет происходить, и&nbsp;спросит разрешение перед удалением данных.</span>
+            <span class="bar"><i></i></span>
+          </button>
+          <button class="tour-step" role="tab" aria-selected="false" aria-controls="tour-screens" data-step="1">
+            <span class="dot"><span>2</span><svg viewBox="0 0 24 24"><use href="#i-check"/></svg></span>
+            <span class="t" data-i18n="s2.t">Проверка ПК</span>
+            <span class="d" data-i18n="s2.d">Мастер проверит совместимость Windows, виртуализацию и&nbsp;свободное место.</span>
+            <span class="bar"><i></i></span>
+          </button>
+          <button class="tour-step" role="tab" aria-selected="false" aria-controls="tour-screens" data-step="2">
+            <span class="dot"><span>3</span><svg viewBox="0 0 24 24"><use href="#i-check"/></svg></span>
+            <span class="t" data-i18n="s3.t">Загрузка и проверка</span>
+            <span class="d" data-i18n="s3.d">Последняя версия DexTor OS скачивается и&nbsp;проверяется: подпись разработчика и&nbsp;контрольная сумма SHA-256.</span>
+            <span class="bar"><i></i></span>
+          </button>
+          <button class="tour-step" role="tab" aria-selected="false" aria-controls="tour-screens" data-step="3">
+            <span class="dot"><span>4</span><svg viewBox="0 0 24 24"><use href="#i-check"/></svg></span>
+            <span class="t" data-i18n="s4.t">USB-накопитель</span>
+            <span class="d" data-i18n="s4.d">Выберите флешку от&nbsp;8&nbsp;ГБ. Данные на&nbsp;ней удаляются только после вашего подтверждения.</span>
+            <span class="bar"><i></i></span>
+          </button>
+          <button class="tour-step" role="tab" aria-selected="false" aria-controls="tour-screens" data-step="4">
+            <span class="dot"><span>5</span><svg viewBox="0 0 24 24"><use href="#i-check"/></svg></span>
+            <span class="t" data-i18n="s5.t">Создание</span>
+            <span class="d" data-i18n="s5.d">Очистка, запись образа и&nbsp;проверка записи — с&nbsp;понятным прогрессом и&nbsp;скоростью.</span>
+            <span class="bar"><i></i></span>
+          </button>
+          <button class="tour-step" role="tab" aria-selected="false" aria-controls="tour-screens" data-step="5">
+            <span class="dot"><span>6</span><svg viewBox="0 0 24 24"><use href="#i-check"/></svg></span>
+            <span class="t" data-i18n="s6.t">Готово</span>
+            <span class="d" data-i18n="s6.d">Запускайте DexTor OS в&nbsp;отдельном окне или загружайтесь с&nbsp;флешки на&nbsp;любом ПК — и&nbsp;управляйте активами.</span>
+            <span class="bar"><i></i></span>
+          </button>
+        </div>
+
+        <div class="tour-visual reveal" data-delay="1">
+          <div class="app-window">
+            <div class="tour-screens" id="tour-screens" role="tabpanel" aria-live="polite">
+              <img class="active" src="assets/screens/step-1.png" width="1920" height="1360" alt="Шаг 1 — Начало" loading="lazy">
+              <img src="assets/screens/step-2.png" width="1920" height="1360" alt="Шаг 2 — Проверка ПК" loading="lazy">
+              <img src="assets/screens/step-3.png" width="1920" height="1360" alt="Шаг 3 — Загрузка и проверка образа" loading="lazy">
+              <img src="assets/screens/step-4.png" width="1920" height="1360" alt="Шаг 4 — Выбор USB-накопителя" loading="lazy">
+              <img src="assets/screens/step-5.png" width="1920" height="1360" alt="Шаг 5 — Создание накопителя" loading="lazy">
+              <img src="assets/screens/step-6.png" width="1920" height="1360" alt="Шаг 6 — Готово" loading="lazy">
+            </div>
+          </div>
+          <div class="tour-caption"><span data-i18n="how.caption">Реальные экраны мастера настройки DexTor&nbsp;OS для Windows</span><span><span id="tour-index">1</span> / 6</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Безопасность ========== -->
+  <section class="section security" id="security">
+    <div class="container security-grid">
+      <div>
+        <span class="eyebrow reveal"><span class="num">03</span><span data-i18n="sec.eyebrow">Безопасность</span></span>
+        <h2 class="h2 reveal" data-delay="1" style="margin-top:16px" data-i18n="sec.title">Защита на&nbsp;каждом уровне.</h2>
+        <div class="points">
+          <div class="point reveal">
+            <h3 data-i18n="p1.t">Полное шифрование</h3>
+            <p data-i18n="p1.d">Весь накопитель зашифрован с&nbsp;помощью LUKS. Без пароля данные на&nbsp;флешке не&nbsp;прочитать.</p>
+          </div>
+          <div class="point reveal" data-delay="1">
+            <h3 data-i18n="p2.t">Анонимная сеть</h3>
+            <p data-i18n="p2.d">Трафик идёт через Tor по&nbsp;умолчанию, VPN — дополнительный слой. Приложения изолированы в&nbsp;песочнице.</p>
+          </div>
+          <div class="point reveal" data-delay="2">
+            <h3 data-i18n="p3.t">«Kill Password»</h3>
+            <p data-i18n="p3.d">Экстренный пароль мгновенно и&nbsp;безвозвратно стирает все данные с&nbsp;USB — на&nbsp;случай физической угрозы.</p>
+          </div>
+        </div>
+        <a class="btn btn-secondary btn-lg reveal" href="#"><svg class="ico"><use href="#i-file"/></svg><span data-i18n="cta.wp">Читать White Paper</span> <span class="arrow" aria-hidden="true">→</span></a>
+      </div>
+
+      <div class="panel-wrap reveal" data-delay="1">
+        <div class="panel" aria-label="Пример панели защиты DexTor OS">
+          <div class="panel-head">
+            <span class="eyebrow" data-i18n="panel.label">Защита</span>
+            <span class="badge" data-i18n="panel.badge">Tor по умолчанию</span>
+          </div>
+          <div class="panel-title">
+            <span class="medal" style="width:40px;height:40px"><svg viewBox="0 0 24 24" style="width:18px;height:18px"><use href="#i-shield"/></svg></span>
+            <div>
+              <h4 data-i18n="panel.title">Все модули активны</h4>
+              <p data-i18n="panel.sub">Сеанс работает только с USB</p>
+            </div>
+          </div>
+          <div class="rows">
+            <div class="row">
+              <div class="ico-tile"><svg class="ico"><use href="#i-lock"/></svg></div>
+              <div class="txt"><b data-i18n="r1.t">Шифрование накопителя</b><span>LUKS</span></div>
+              <div class="status"><span class="medal"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg></span><span class="lbl" data-i18n="r.on">включено</span></div>
+            </div>
+            <div class="row">
+              <div class="ico-tile"><svg class="ico"><use href="#i-globe"/></svg></div>
+              <div class="txt"><b data-i18n="r2.t">Анонимная сеть</b><span>Tor + VPN</span></div>
+              <div class="status"><span class="medal"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg></span><span class="lbl" data-i18n="r.on">включено</span></div>
+            </div>
+            <div class="row">
+              <div class="ico-tile"><svg class="ico"><use href="#i-box"/></svg></div>
+              <div class="txt"><b data-i18n="r3.t">Песочница приложений</b><span data-i18n="r3.d">Изоляция dApps</span></div>
+              <div class="status"><span class="medal"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg></span><span class="lbl" data-i18n="r.on">включено</span></div>
+            </div>
+            <div class="row">
+              <div class="ico-tile"><svg class="ico"><use href="#i-scan"/></svg></div>
+              <div class="txt"><b data-i18n="r4.t">AI-сканер</b><span data-i18n="r4.d">Фишинг и смарт-контракты</span></div>
+              <div class="status"><span class="medal"><svg viewBox="0 0 24 24"><use href="#i-check"/></svg></span><span class="lbl" data-i18n="r.on">включено</span></div>
+            </div>
+          </div>
+          <div class="danger-block">
+            <svg class="ico"><use href="#i-trash"/></svg>
+            <div><b>Kill Password</b><span data-i18n="panel.kill">Экстренное удаление всех данных с USB</span></div>
+          </div>
+          <div class="panel-foot">
+            <div><small data-i18n="pf.1">Модулей</small><strong>20+</strong></div>
+            <div><small data-i18n="pf.2">Следов на ПК</small><strong>0</strong></div>
+            <div><small data-i18n="pf.3">Установка</small><strong data-i18n="pf.3v">Не нужна</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Заявление ========== -->
+  <section class="statement" aria-label="Без следов">
+    <svg class="arcs" viewBox="0 0 1000 1000" aria-hidden="true">
+      <defs>
+        <linearGradient id="arcStroke" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#E7E7EC" stop-opacity=".55"/>
+          <stop offset=".45" stop-color="#A6A6BC" stop-opacity=".25"/>
+          <stop offset="1" stop-color="#3B384B" stop-opacity="0"/>
+        </linearGradient>
+        <radialGradient id="arcFill" cx=".5" cy=".5" r=".5">
+          <stop offset="0" stop-color="#272436" stop-opacity=".9"/>
+          <stop offset="1" stop-color="#16151E" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="arcGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="6"/></filter>
+      </defs>
+      <circle cx="560" cy="560" r="430" fill="url(#arcFill)"/>
+      <g class="arc-set">
+        <circle cx="560" cy="560" r="440" stroke="url(#arcStroke)" stroke-width="10" filter="url(#arcGlow)" opacity=".5"/>
+        <circle cx="560" cy="560" r="440" stroke="url(#arcStroke)" stroke-width="1.5"/>
+        <circle cx="600" cy="600" r="360" stroke="url(#arcStroke)" stroke-width="1.2" opacity=".8"/>
+        <circle cx="640" cy="640" r="280" stroke="url(#arcStroke)" stroke-width="8" filter="url(#arcGlow)" opacity=".35"/>
+        <circle cx="640" cy="640" r="280" stroke="url(#arcStroke)" stroke-width="1.2"/>
+        <circle cx="680" cy="680" r="200" stroke="url(#arcStroke)" stroke-width="1" opacity=".6"/>
+      </g>
+    </svg>
+    <div class="container">
+      <h2 class="h2 reveal" data-i18n="st.title"><span class="muted">Вынули флешку —</span><br>и&nbsp;никаких следов на&nbsp;компьютере.</h2>
+      <p class="lead reveal" data-delay="1" data-i18n="st.lead">DexTor OS работает целиком с&nbsp;USB и&nbsp;ничего не&nbsp;записывает на&nbsp;диск компьютера. Гарантия удаления цифровых следов — 99,9%.</p>
+      <a class="btn btn-secondary btn-lg reveal" data-delay="2" href="#download"><span data-i18n="cta.start">Начать за 10 минут</span> <span class="arrow" aria-hidden="true">→</span></a>
+    </div>
+  </section>
+
+  <!-- ========== Roadmap ========== -->
+  <section class="section" id="roadmap">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow reveal"><span class="num">04</span>Roadmap</span>
+        <h2 class="h2 reveal" data-delay="1" data-i18n="rm.title"><span class="muted">Шесть фаз развития</span><br><span class="brand">DexTor OS</span>.</h2>
+        <p class="lead reveal" data-delay="2" data-i18n="rm.lead">От ядра безопасности и&nbsp;DEX до&nbsp;мобильного кошелька, мессенджера и&nbsp;корпоративной версии.</p>
+      </div>
+
+      <div class="roadmap-tabs reveal" role="tablist" aria-label="Фазы roadmap" id="roadmap-tabs"></div>
+      <div class="phase-panel reveal" id="phase-panel" role="tabpanel" aria-live="polite">
+        <div>
+          <span class="ph-num" id="ph-num">Фаза 01</span>
+          <h3 id="ph-title"></h3>
+          <span class="badge ph-months" id="ph-months"></span>
+          <div class="ph-nav">
+            <button type="button" class="btn btn-secondary" id="ph-prev"><span aria-hidden="true">←</span> <span data-i18n="rm.prev">Назад</span></button>
+            <button type="button" class="btn btn-secondary" id="ph-next"><span data-i18n="rm.next">Следующая фаза</span> <span class="arrow" aria-hidden="true">→</span></button>
+          </div>
+        </div>
+        <ul class="phase-list" id="ph-list"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== FAQ ========== -->
+  <section class="section section-tight" id="faq">
+    <div class="container faq-grid">
+      <div class="faq-aside">
+        <span class="eyebrow reveal"><span class="num">05</span>FAQ</span>
+        <h2 class="h2 reveal" data-delay="1" style="margin-top:16px" data-i18n="faq.title">Вопросы и&nbsp;ответы.</h2>
+        <p class="reveal" data-delay="2" data-i18n="faq.lead">Не нашли ответ? Напишите нам — команда DexTor OS отвечает в&nbsp;Telegram и&nbsp;Discord.</p>
+        <a class="btn btn-secondary reveal" data-delay="3" href="#contacts"><span data-i18n="cta.contact">Связаться с нами</span> <span class="arrow" aria-hidden="true">→</span></a>
+      </div>
+      <div class="faq-list">
+        <details class="faq-item reveal">
+          <summary><span data-i18n="q1">DexTor OS — это кошелёк, биржа или операционная система?</span><span class="chev"><svg class="ico" style="width:16px;height:16px"><use href="#i-plus"/></svg></span></summary>
+          <div class="ans" data-i18n="a1">Это портативная операционная система на&nbsp;базе Linux. Кошелёк, DEX, стейкинг и&nbsp;мессенджер встроены в&nbsp;неё — не&nbsp;нужно ставить и&nbsp;настраивать отдельные приложения.</div>
+        </details>
+        <details class="faq-item reveal">
+          <summary><span data-i18n="q2">Нужно ли что-то устанавливать?</span><span class="chev"><svg class="ico" style="width:16px;height:16px"><use href="#i-plus"/></svg></span></summary>
+          <div class="ans" data-i18n="a2">Нет. Мастер настройки для Windows сам скачает и&nbsp;проверит образ и&nbsp;запишет его на&nbsp;флешку. Дальше DexTor OS запускается с&nbsp;USB — в&nbsp;отдельном окне или при загрузке любого ПК, без установки на&nbsp;диск.</div>
+        </details>
+        <details class="faq-item reveal">
+          <summary><span data-i18n="q3">Что будет, если я потеряю флешку?</span><span class="chev"><svg class="ico" style="width:16px;height:16px"><use href="#i-plus"/></svg></span></summary>
+          <div class="ans" data-i18n="a3">Накопитель полностью зашифрован: без пароля данные на&nbsp;нём не&nbsp;прочитать. Храните резервную фразу кошелька отдельно от&nbsp;флешки — с&nbsp;ней вы восстановите доступ к&nbsp;средствам на&nbsp;новом накопителе.</div>
+        </details>
+        <details class="faq-item reveal">
+          <summary><span data-i18n="q4">Как убедиться, что образ подлинный?</span><span class="chev"><svg class="ico" style="width:16px;height:16px"><use href="#i-plus"/></svg></span></summary>
+          <div class="ans" data-i18n="a4">Мастер настройки проверяет цифровую подпись разработчика и&nbsp;контрольную сумму SHA-256. Если что-то не&nbsp;совпадает, запись на&nbsp;флешку не&nbsp;начнётся.</div>
+        </details>
+        <details class="faq-item reveal">
+          <summary><span data-i18n="q5">Есть ли мобильная версия?</span><span class="chev"><svg class="ico" style="width:16px;height:16px"><use href="#i-plus"/></svg></span></summary>
+          <div class="ans" data-i18n="a5">Пока нет. Мобильный кошелёк для iOS и&nbsp;Android запланирован в&nbsp;фазе&nbsp;4 roadmap.</div>
+        </details>
+        <details class="faq-item reveal">
+          <summary><span data-i18n="q6">Что такое функция «Kill Password»?</span><span class="chev"><svg class="ico" style="width:16px;height:16px"><use href="#i-plus"/></svg></span></summary>
+          <div class="ans" data-i18n="a6">Это экстренная функция: специальный пароль мгновенно, безвозвратно и&nbsp;надёжно стирает все данные с&nbsp;USB — на&nbsp;случай физической угрозы.</div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== Финальный CTA ========== -->
+  <section class="section section-tight section-last" id="download">
+    <div class="container">
+      <div class="cta-card reveal">
+        <span class="eyebrow"><span class="num">06</span><span data-i18n="dl.eyebrow">Скачать</span></span>
+        <h2 class="h2" data-i18n="dl.title">Создайте флешку с&nbsp;<span class="brand">DexTor&nbsp;OS</span> за&nbsp;10&nbsp;минут.</h2>
+        <p class="lead" data-i18n="dl.lead">Скачайте мастер настройки для Windows — он&nbsp;проверит компьютер, загрузит образ и&nbsp;подготовит USB-накопитель.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary btn-lg" href="#"><svg class="ico" style="width:18px;height:18px"><use href="#i-download"/></svg><span data-i18n="cta.downloadWin">Скачать для Windows</span> <span class="arrow" aria-hidden="true">→</span></a>
+          <a class="btn btn-secondary btn-lg" href="#"><svg class="ico"><use href="#i-file"/></svg><span>White Paper</span></a>
+        </div>
+        <ul class="req">
+          <li><svg class="ico"><use href="#i-usb"/></svg><span data-i18n="req.1"><b>8 ГБ</b> флешка, минимум</span></li>
+          <li><svg class="ico"><use href="#i-download"/></svg><span data-i18n="req.2"><b>1,6 ГБ</b> скачивание</span></li>
+          <li><svg class="ico"><use href="#i-clock"/></svg><span data-i18n="req.3"><b>~10 мин</b> на всё</span></li>
+          <li><svg class="ico"><use href="#i-cpu"/></svg><span data-i18n="req.4">Windows · виртуализация</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ========== Подвал ========== -->
+<footer class="site-footer" id="contacts">
+  <div class="container">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="logo" href="#top"><img src="assets/logo.png" alt="DexTor OS" width="216" height="47"></a>
+        <p data-i18n="foot.tag">Портативная ОС для безопасного доступа к&nbsp;Web3. Создана для децентрализованного будущего.</p>
+        <div class="socials">
+          <a href="#" aria-label="Email"><svg class="ico"><use href="#i-mail"/></svg></a>
+          <a href="#" aria-label="GitHub"><svg class="ico"><use href="#i-github"/></svg></a>
+          <a href="#" aria-label="Telegram"><svg class="ico"><use href="#i-telegram"/></svg></a>
+          <a href="#" aria-label="Discord"><svg class="ico"><use href="#i-discord"/></svg></a>
+          <a href="#" aria-label="X"><svg class="ico"><use href="#i-x"/></svg></a>
+        </div>
+      </div>
+      <div class="foot-col">
+        <h4 data-i18n="foot.product">Продукт</h4>
+        <ul>
+          <li><a href="#platform" data-i18n="nav.platform">Возможности</a></li>
+          <li><a href="#how" data-i18n="nav.how">Как это работает</a></li>
+          <li><a href="#security" data-i18n="nav.security">Безопасность</a></li>
+          <li><a href="#download" data-i18n="cta.download">Скачать</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4 data-i18n="foot.res">Ресурсы</h4>
+        <ul>
+          <li><a href="#">White Paper</a></li>
+          <li><a href="#roadmap">Roadmap</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="#">GitHub</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4 data-i18n="foot.comm">Сообщество</h4>
+        <ul>
+          <li><a href="#">Telegram</a></li>
+          <li><a href="#">Discord</a></li>
+          <li><a href="#">X</a></li>
+          <li><a href="#">Email</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 DexTor OS</span>
+      <a href="https://dextoros.com">dextoros.com</a>
+    </div>
+  </div>
+</footer>
+
+<script src="js/i18n.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
