@@ -325,7 +325,6 @@ h1, h2, h3, h4, p { margin: 0; }
   background: var(--card);
   border: 1px solid var(--border-card);
   transition: border-color 200ms, transform 300ms var(--ease), background-color 200ms;
-  overflow: hidden;
 }
 .feature:hover { border-color: var(--border-field); }
 .feature h3 { margin-top: 24px; font-size: 18px; line-height: 24px; font-weight: 600; letter-spacing: -0.01em; }
@@ -457,7 +456,7 @@ h1, h2, h3, h4, p { margin: 0; }
 .statement .lead { margin-top: 24px; max-width: 520px; }
 .statement .btn { margin-top: 40px; }
 .arcs { position: absolute; right: -8%; top: 50%; transform: translateY(-50%); width: min(980px, 80vw); height: auto; z-index: 1; pointer-events: none; }
-.arcs circle { fill: none; }
+.arcs .arc { fill: none; }
 
 /* ---------- FAQ ---------- */
 .faq-grid { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 80px; align-items: start; }
@@ -530,6 +529,7 @@ h1, h2, h3, h4, p { margin: 0; }
   html { scroll-behavior: auto; }
   .reveal { opacity: 1; transform: none; transition: none; }
   *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+  .arcs .orbit, .spin { animation: none !important; }
 }
 
 /* ==========================================================================
@@ -777,3 +777,70 @@ html:has(.page-roadmap) { scroll-padding-top: calc(var(--header-h) + 72px); }
   .ms, .ms:first-child { min-height: 0; gap: 20px; }
   .ms:first-child .ms-t { font-size: 19px; line-height: 26px; }
 }
+
+/* ==========================================================================
+   Эффекты главной (js/effects.js)
+   ========================================================================== */
+
+/* Сеть Tor в hero */
+.hero .net {
+  position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse 70% 85% at 74% 48%, black 30%, transparent 80%);
+  mask-image: radial-gradient(ellipse 70% 85% at 74% 48%, black 30%, transparent 80%);
+}
+@media (max-width: 1100px) {
+  .hero .net {
+    -webkit-mask-image: radial-gradient(ellipse 90% 60% at 50% 72%, black 30%, transparent 85%);
+    mask-image: radial-gradient(ellipse 90% 60% at 50% 72%, black 30%, transparent 85%);
+  }
+}
+
+/* 3D-наклон окна продукта */
+.app-window.tilt { transform-origin: 40% 50%; will-change: transform; }
+.float-card { will-change: transform; }
+
+/* Подсветка рамки карточек за курсором */
+.spot::after {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: radial-gradient(260px circle at var(--mx, -999px) var(--my, -999px), var(--progress), transparent 65%);
+  -webkit-mask: linear-gradient(black 0 0) content-box, linear-gradient(black 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(black 0 0) content-box exclude, linear-gradient(black 0 0);
+  opacity: 0; transition: opacity 300ms;
+}
+.spot-zone:hover .spot::after { opacity: 1; }
+
+/* Сканирование модулей в панели безопасности */
+.row { position: relative; overflow: hidden; }
+.row .status { position: relative; }
+.row .status .medal, .row .status .lbl { transition: opacity 300ms, transform 450ms var(--ease); }
+.spin {
+  display: none; width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid var(--border-field); border-top-color: var(--progress);
+  animation: spin 800ms linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.panel.scan .row:not(.ok) .medal, .panel.scan .row:not(.ok) .lbl { opacity: 0; transform: scale(.4); position: absolute; }
+.panel.scan .row.checking .spin { display: block; }
+.row::after { /* бегущая полоса проверки */
+  content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 40%; pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--border-plate), transparent);
+  transform: translateX(-120%); opacity: 0;
+}
+.panel.scan .row.checking::after { opacity: 1; animation: sweep 700ms var(--ease) forwards; }
+@keyframes sweep { to { transform: translateX(300%); } }
+.panel-title .medal, .danger-block, .panel-foot { transition: opacity 500ms var(--ease), transform 500ms var(--ease); }
+.panel.scan .panel-title .medal { opacity: 0; transform: scale(.5); }
+.panel.scan .danger-block, .panel.scan .panel-foot { opacity: 0; transform: translateY(8px); }
+
+/* Орбиты в блоке «без следов» */
+.arcs .arc { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 2400ms var(--ease); }
+.arcs .arc:nth-of-type(2) { transition-delay: 150ms; }
+.arcs .arc:nth-of-type(3) { transition-delay: 300ms; }
+.arcs .arc:nth-of-type(4) { transition-delay: 450ms; }
+.arcs.in .arc { stroke-dashoffset: 0; }
+.arcs .orbit { transform-box: view-box; animation-name: orbit; animation-timing-function: linear; animation-iteration-count: infinite; }
+.arcs .orbit.rev { animation-direction: reverse; }
+.arcs .orbit circle { opacity: 0; transition: opacity 1200ms 1600ms; }
+.arcs.in .orbit circle { opacity: 1; }
+@keyframes orbit { to { transform: rotate(360deg); } }

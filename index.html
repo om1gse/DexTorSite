@@ -95,6 +95,7 @@
 
   <!-- ========== Hero ========== -->
   <section class="hero">
+    <canvas class="net" aria-hidden="true"></canvas>
     <div class="container hero-grid">
       <div class="hero-copy">
         <div class="badge-row reveal">
@@ -352,10 +353,14 @@
           <stop offset="1" stop-color="#2C2A3A" stop-opacity="0"/>
         </linearGradient>
       </defs>
-      <circle cx="560" cy="560" r="440" stroke="url(#arcStroke)" stroke-width="1.5"/>
-      <circle cx="600" cy="600" r="360" stroke="url(#arcStroke)" stroke-width="1.2"/>
-      <circle cx="640" cy="640" r="280" stroke="url(#arcStroke)" stroke-width="1.2"/>
-      <circle cx="680" cy="680" r="200" stroke="url(#arcStroke)" stroke-width="1"/>
+      <circle class="arc" pathLength="1" cx="560" cy="560" r="440" stroke="url(#arcStroke)" stroke-width="1.5"/>
+      <circle class="arc" pathLength="1" cx="600" cy="600" r="360" stroke="url(#arcStroke)" stroke-width="1.2"/>
+      <circle class="arc" pathLength="1" cx="640" cy="640" r="280" stroke="url(#arcStroke)" stroke-width="1.2"/>
+      <circle class="arc" pathLength="1" cx="680" cy="680" r="200" stroke="url(#arcStroke)" stroke-width="1"/>
+      <g class="orbit" style="transform-origin:560px 560px;animation-duration:90s;animation-delay:-62s"><circle cx="560" cy="120" r="3.5" fill="#E7E7EC"/></g>
+      <g class="orbit rev" style="transform-origin:600px 600px;animation-duration:64s;animation-delay:-14s"><circle cx="600" cy="240" r="3" fill="#A6A6BC"/></g>
+      <g class="orbit" style="transform-origin:640px 640px;animation-duration:46s;animation-delay:-30s"><circle cx="640" cy="360" r="4" fill="#3DDC97"/></g>
+      <g class="orbit rev" style="transform-origin:680px 680px;animation-duration:34s;animation-delay:-5s"><circle cx="680" cy="480" r="2.5" fill="#E7E7EC"/></g>
     </svg>
     <div class="container">
       <h2 class="h2 reveal" data-i18n="st.title"><span class="muted">Unplug the USB —</span><br>and leave no trace on the computer.</h2>
@@ -528,6 +533,7 @@
 </footer>
 
 <script src="js/i18n.js"></script>
+<script src="js/effects.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
