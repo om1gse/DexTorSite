@@ -179,6 +179,13 @@
   var altNodes = document.querySelectorAll('[data-i18n-alt]');
   altNodes.forEach(function (n) { originals.set(n, n.getAttribute('alt')); });
   var originalTitle = document.title;
+  // Картинки с версиями под язык: src — язык по умолчанию, data-src-<lang> — остальные
+  var langImgs = Array.prototype.slice.call(document.querySelectorAll('img')).filter(function (img) {
+    return Object.keys(img.dataset).some(function (k) { return k.indexOf('src') === 0 && k.length > 3; });
+  });
+  langImgs.forEach(function (img) { img.dataset.srcDefault = img.getAttribute('src'); });
+  // Ключ v2: старый «dextor-lang» мог сохранить автоопределённый «ru» из прошлой версии сайта
+  var LANG_KEY = 'dextor-lang-v2';
 
   function setLang(next) {
     lang = (next && I18N[next]) || next === DEFAULT_LANG ? next : DEFAULT_LANG;
@@ -197,13 +204,20 @@
     document.querySelectorAll('[data-lang]').forEach(function (b) {
       b.setAttribute('aria-pressed', String(b.dataset.lang === lang));
     });
+    langImgs.forEach(function (img) {
+      var key = 'src' + lang.charAt(0).toUpperCase() + lang.slice(1);
+      var src = (dict && img.dataset[key]) || img.dataset.srcDefault;
+      if (img.getAttribute('src') !== src) img.setAttribute('src', src);
+    });
     stats.forEach(function (el) { if (el.dataset.done) renderStat(el, parseFloat(el.dataset.count)); });
-    store('dextor-lang', lang);
   }
 
   document.querySelectorAll('[data-lang]').forEach(function (b) {
-    b.addEventListener('click', function () { setLang(b.dataset.lang); });
+    b.addEventListener('click', function () {
+      setLang(b.dataset.lang);
+      store(LANG_KEY, lang); // запоминаем только явный выбор пользователя
+    });
   });
 
-  setLang(store('dextor-lang') || DEFAULT_LANG);
+  setLang(store(LANG_KEY) || DEFAULT_LANG);
 })();
