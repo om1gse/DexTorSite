@@ -55,40 +55,83 @@
     requestAnimationFrame(frame);
   }
 
-  /* ---------- Живая сеть Tor в hero ---------- */
-  function torNetwork(canvas) {
-    var host = canvas.parentElement;
-    var ctx = canvas.getContext('2d');
-    var W = 0, H = 0, nodes = [], packets = [];
-    var mouse = { x: -1e4, y: -1e4 };
-    var LINK = 150, HOT = 180;
-    var raf = 0, visible = true, lastSpawn = 0;
+  /* ---------- Живая сеть Tor на всю страницу ----------
+     Один закреплённый холст за контентом; узлы живут в координатах документа,
+     поэтому при прокрутке сеть непрерывно перетекает из блока в блок.
+     Под текстовыми блоками сеть плавно гаснет — она заполняет только пустые места. */
+  var QUIET_ZONES = [
+    '.header-inner', '.hero-copy', '.section-head', '.rm-teaser-head', '.stack', '.stats-grid',
+    '.tour-steps', '.tour-caption', '.security-grid > div:first-child', '.statement .container',
+    '.faq-aside', '.foot-grid', '.foot-bottom', '.rp-hero .container', '.phase-aside', '.cta-card'
+  ].join(',');
 
-    function makeNode() {
-      var a = Math.random() * Math.PI * 2, s = 0.05 + Math.random() * 0.12;
-      return { x: Math.random() * W, y: Math.random() * H, vx: Math.cos(a) * s, vy: Math.sin(a) * s, r: 1 + Math.random() * 1.3, flash: 0 };
-    }
+  function pageNetwork() {
+    var canvas = document.createElement('canvas');
+    canvas.className = 'page-net';
+    canvas.setAttribute('aria-hidden', 'true');
+    document.body.prepend(canvas);
+    var ctx = canvas.getContext('2d');
+
+    var LINK = 155, HOT = 180, FALLOFF = 80, QUIET = 0.1, DENSITY = 10500;
+    var vw = 0, vh = 0, docH = 0, nodes = [], packets = [], zones = [];
+    var mouse = { cx: -1e4, cy: -1e4 };
+    var raf = 0, lastSpawn = 0, lastZones = 0;
+
     function dist(a, b) { var dx = a.x - b.x, dy = a.y - b.y; return Math.sqrt(dx * dx + dy * dy); }
+    function makeNode(yMin, yMax) {
+      var a = Math.random() * Math.PI * 2, s = 0.05 + Math.random() * 0.12;
+      return { x: Math.random() * vw, y: yMin + Math.random() * (yMax - yMin), vx: Math.cos(a) * s, vy: Math.sin(a) * s,
+               r: 1 + Math.random() * 1.3, flash: 0, f: 1 };
+    }
+
+    function measureZones() {
+      var sy = window.scrollY;
+      zones = [];
+      document.querySelectorAll(QUIET_ZONES).forEach(function (el) {
+        var r = el.getBoundingClientRect();
+        if (r.width && r.height) zones.push({ x1: r.left, y1: r.top + sy, x2: r.right, y2: r.bottom + sy });
+      });
+      lastZones = performance.now();
+    }
 
     function resize() {
-      var r = host.getBoundingClientRect();
       var dpr = Math.min(2, window.devicePixelRatio || 1);
-      W = r.width; H = r.height;
-      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      vw = window.innerWidth; vh = window.innerHeight;
+      canvas.width = Math.round(vw * dpr); canvas.height = Math.round(vh * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      var count = Math.round(Math.min(90, Math.max(26, (W * H) / 16000)));
-      while (nodes.length < count) nodes.push(makeNode());
+      var newH = document.documentElement.scrollHeight;
+      var count = Math.round(Math.min(1800, (vw * newH) / DENSITY));
+      if (newH > docH && nodes.length) { // страница выросла — досеять узлы в новую часть
+        while (nodes.length < count) nodes.push(makeNode(docH, newH));
+      }
+      docH = newH;
+      while (nodes.length < count) nodes.push(makeNode(0, docH));
       nodes.length = count;
-      nodes.forEach(function (n) { n.x = Math.min(n.x, W); n.y = Math.min(n.y, H); });
+      nodes.forEach(function (n) { if (n.x > vw) n.x = Math.random() * vw; if (n.y > docH) n.y = Math.random() * docH; });
+      measureZones();
     }
 
-    // Пакет идёт по цепочке из 3 узлов — как маршрут в Tor
-    function spawn() {
-      var first = nodes[Math.floor(Math.random() * nodes.length)];
+    // 1 — свободное место, QUIET — под текстом, плавный переход на расстоянии FALLOFF
+    function openness(n) {
+      var f = 1;
+      for (var i = 0; i < zones.length; i++) {
+        var z = zones[i];
+        var dx = Math.max(z.x1 - n.x, 0, n.x - z.x2), dy = Math.max(z.y1 - n.y, 0, n.y - z.y2);
+        if (dx > FALLOFF || dy > FALLOFF) continue;
+        var d = Math.sqrt(dx * dx + dy * dy);
+        if (d < FALLOFF) f = Math.min(f, QUIET + (1 - QUIET) * (d / FALLOFF));
+      }
+      return f;
+    }
+
+    function spawn(visible) {
+      if (visible.length < 4) return;
+      var first = visible[Math.floor(Math.random() * visible.length)];
+      if (first.f < 0.6) return; // пакеты стартуют только на свободных участках
       var path = [first];
       for (var h = 0; h < 3; h++) {
         var cur = path[path.length - 1];
-        var options = nodes.filter(function (m) { return path.indexOf(m) < 0 && dist(cur, m) < LINK; });
+        var options = visible.filter(function (m) { return path.indexOf(m) < 0 && m.f > 0.4 && dist(cur, m) < LINK; });
         if (!options.length) break;
         path.push(options[Math.floor(Math.random() * options.length)]);
       }
@@ -98,44 +141,52 @@
     }
 
     function draw(now, animate) {
-      ctx.clearRect(0, 0, W, H);
-      var i, j, a, b, d;
+      var sy = window.scrollY;
+      var top = sy - LINK, bottom = sy + vh + LINK;
+      var m = { x: mouse.cx, y: mouse.cy + sy }; // курсор в координатах документа
+      ctx.clearRect(0, 0, vw, vh);
+      if (now - lastZones > 1200) measureZones(); // раскрытые FAQ, смена языка и т. п.
 
-      if (animate) {
-        nodes.forEach(function (n) {
+      var visible = [], i, j, a, b, d;
+      for (i = 0; i < nodes.length; i++) {
+        var n = nodes[i];
+        if (animate) {
           n.x += n.vx; n.y += n.vy;
-          if (n.x < -20) n.x = W + 20; else if (n.x > W + 20) n.x = -20;
-          if (n.y < -20) n.y = H + 20; else if (n.y > H + 20) n.y = -20;
+          if (n.x < -20) n.x = vw + 20; else if (n.x > vw + 20) n.x = -20;
+          if (n.y < -20) n.y = docH + 20; else if (n.y > docH + 20) n.y = -20;
           n.flash *= 0.95;
-        });
+        }
+        if (n.y > top && n.y < bottom) { n.f = openness(n); visible.push(n); }
       }
 
       // связи
       ctx.lineWidth = 1;
-      for (i = 0; i < nodes.length; i++) {
-        a = nodes[i];
-        for (j = i + 1; j < nodes.length; j++) {
-          b = nodes[j];
+      for (i = 0; i < visible.length; i++) {
+        a = visible[i];
+        for (j = i + 1; j < visible.length; j++) {
+          b = visible[j];
+          if (Math.abs(a.y - b.y) >= LINK) continue;
           d = dist(a, b);
           if (d >= LINK) continue;
-          var mx = (a.x + b.x) / 2 - mouse.x, my = (a.y + b.y) / 2 - mouse.y;
+          var f = Math.min(a.f, b.f);
+          var mx = (a.x + b.x) / 2 - m.x, my = (a.y + b.y) / 2 - m.y;
           var hot = mx * mx + my * my < HOT * HOT;
-          ctx.globalAlpha = (1 - d / LINK) * (hot ? 0.9 : 0.55);
+          ctx.globalAlpha = (1 - d / LINK) * (hot ? 0.95 : 0.7) * f;
           ctx.strokeStyle = hot ? KIT.edgeHot : KIT.edge;
-          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(a.x, a.y - sy); ctx.lineTo(b.x, b.y - sy); ctx.stroke();
         }
       }
 
       // узлы
-      nodes.forEach(function (n) {
-        var hot = dist(n, mouse) < HOT;
-        ctx.globalAlpha = hot ? 1 : 0.85;
+      visible.forEach(function (n) {
+        var hot = dist(n, m) < HOT;
+        ctx.globalAlpha = (hot ? 1 : 0.85) * n.f;
         ctx.fillStyle = hot ? KIT.nodeHot : KIT.node;
-        ctx.beginPath(); ctx.arc(n.x, n.y, n.r + (hot ? 0.6 : 0), 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(n.x, n.y - sy, n.r + (hot ? 0.6 : 0), 0, Math.PI * 2); ctx.fill();
         if (n.flash > 0.03) {
-          ctx.globalAlpha = n.flash * 0.8;
+          ctx.globalAlpha = n.flash * 0.8 * n.f;
           ctx.strokeStyle = KIT.green;
-          ctx.beginPath(); ctx.arc(n.x, n.y, n.r + (1 - n.flash) * 16, 0, Math.PI * 2); ctx.stroke();
+          ctx.beginPath(); ctx.arc(n.x, n.y - sy, n.r + (1 - n.flash) * 16, 0, Math.PI * 2); ctx.stroke();
         }
       });
 
@@ -151,46 +202,50 @@
             a = p.path[p.seg]; b = p.path[p.seg + 1];
           }
           var x = a.x + (b.x - a.x) * p.t, y = a.y + (b.y - a.y) * p.t;
+          var pf = Math.min(a.f, b.f);
           p.trail.push([x, y]);
           if (p.trail.length > 16) p.trail.shift();
           ctx.lineWidth = 1.5;
           ctx.strokeStyle = KIT.green;
           for (j = 1; j < p.trail.length; j++) {
-            ctx.globalAlpha = (j / p.trail.length) * 0.7;
-            ctx.beginPath(); ctx.moveTo(p.trail[j - 1][0], p.trail[j - 1][1]); ctx.lineTo(p.trail[j][0], p.trail[j][1]); ctx.stroke();
+            ctx.globalAlpha = (j / p.trail.length) * 0.7 * pf;
+            ctx.beginPath(); ctx.moveTo(p.trail[j - 1][0], p.trail[j - 1][1] - sy); ctx.lineTo(p.trail[j][0], p.trail[j][1] - sy); ctx.stroke();
           }
-          ctx.globalAlpha = 1;
+          ctx.globalAlpha = pf;
           ctx.fillStyle = KIT.greenLight;
-          ctx.beginPath(); ctx.arc(x, y, 2.2, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(x, y - sy, 2.2, 0, Math.PI * 2); ctx.fill();
         }
-        if (now - lastSpawn > 650 && packets.length < 7) { spawn(); lastSpawn = now; }
+        // частота пакетов растёт с площадью экрана
+        var maxPackets = Math.max(3, Math.round(vw * vh / 180000));
+        if (now - lastSpawn > 650 && packets.length < maxPackets) { spawn(visible); lastSpawn = now; }
       }
       ctx.globalAlpha = 1;
     }
 
-    function loop(now) {
-      draw(now, true);
-      raf = requestAnimationFrame(loop);
-    }
-    function start() { if (!raf && visible && !document.hidden) raf = requestAnimationFrame(loop); }
+    function loop(now) { draw(now, true); raf = requestAnimationFrame(loop); }
+    function start() { if (!raf && !document.hidden) raf = requestAnimationFrame(loop); }
     function stop() { cancelAnimationFrame(raf); raf = 0; }
 
     resize();
-    if (reduce) { draw(0, false); window.addEventListener('resize', function () { resize(); draw(0, false); }); return; }
-
     window.addEventListener('resize', resize);
-    host.addEventListener('pointermove', function (e) {
-      var r = canvas.getBoundingClientRect();
-      mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top;
-    });
-    host.addEventListener('pointerleave', function () { mouse.x = mouse.y = -1e4; });
-    document.addEventListener('visibilitychange', function () { if (document.hidden) stop(); else start(); });
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver(function (entries) {
-        visible = entries[0].isIntersecting;
-        if (visible) start(); else stop();
-      }).observe(host);
+    if ('ResizeObserver' in window) {
+      new ResizeObserver(function () {
+        if (Math.abs(document.documentElement.scrollHeight - docH) > 40) resize();
+      }).observe(document.body);
     }
+
+    if (reduce) { // статичная картинка, перерисовываем только при прокрутке
+      var pending = false;
+      var still = function () { pending = false; draw(performance.now(), false); };
+      window.addEventListener('scroll', function () { if (!pending) { pending = true; requestAnimationFrame(still); } }, { passive: true });
+      window.addEventListener('resize', still);
+      still();
+      return;
+    }
+
+    window.addEventListener('pointermove', function (e) { mouse.cx = e.clientX; mouse.cy = e.clientY; }, { passive: true });
+    document.addEventListener('pointerleave', function () { mouse.cx = mouse.cy = -1e4; });
+    document.addEventListener('visibilitychange', function () { if (document.hidden) stop(); else start(); });
     start();
   }
 
@@ -286,8 +341,7 @@
     onReveal: function (el) { if (el.classList.contains('eyebrow')) scramble(el, 700); }
   };
 
-  var canvas = document.querySelector('.hero .net');
-  if (canvas) torNetwork(canvas);
+  pageNetwork();
   heroTilt();
   spotlight('.features', '.feature');
   spotlight('.rm-cards', '.rm-card');
