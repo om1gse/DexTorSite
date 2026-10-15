@@ -779,9 +779,55 @@ html:has(.page-roadmap) { scroll-padding-top: calc(var(--header-h) + 72px); }
    Эффекты главной (js/effects.js)
    ========================================================================== */
 
-/* Сеть Tor на всю страницу: закреплённый холст за контентом */
-.page-net { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; }
+/* Фон на всю страницу: свет → сетка → сеть Tor (холст) → зерно и виньетка */
+.page-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; --cx: -9999px; --cy: -9999px; --gy: 0px; }
+.page-bg > * { position: absolute; inset: 0; }
+.page-bg canvas { width: 100vw; height: 100vh; }
 main, .site-footer { position: relative; z-index: 1; }
+
+/* Сиреневый свет: два медленно дрейфующих пятна + свет за курсором */
+.bg-aura { background: radial-gradient(380px circle at var(--cx) var(--cy), rgba(214, 196, 255, 0.035), transparent 70%); } /* курсор — лёгкая добавка */
+.bg-aura::before, .bg-aura::after {
+  content: ""; position: absolute; width: 70vmax; height: 70vmax; border-radius: 50%;
+  background: radial-gradient(circle, rgba(214, 196, 255, 0.14), var(--lilac-glow) 32%, transparent 64%); /* оттенок --lilac-glow */
+  animation: aura-a 22s ease-in-out infinite alternate;
+}
+.bg-aura::before { left: -22vmax; top: -30vmax; }
+.bg-aura::after { right: -26vmax; bottom: -34vmax; animation-name: aura-b; animation-duration: 27s; }
+@keyframes aura-a { 50% { transform: translate3d(34vw, 8vh, 0) scale(1.2); } to { transform: translate3d(14vw, 40vh, 0) scale(0.95); } }
+@keyframes aura-b { 50% { transform: translate3d(-36vw, -6vh, 0) scale(0.85); } to { transform: translate3d(-12vw, -44vh, 0) scale(1.15); } }
+
+/* Сетка: едва заметная сверху и проявляется вокруг курсора */
+.bg-grid::before, .bg-grid::after {
+  content: ""; position: absolute; inset: -72px 0;
+  background-image: linear-gradient(var(--lilac-line) 1px, transparent 1px), linear-gradient(90deg, var(--lilac-line) 1px, transparent 1px);
+  background-size: 72px 72px; background-position: center var(--gy);
+}
+.bg-grid::before {
+  opacity: 0.8;
+  -webkit-mask: radial-gradient(ellipse 90% 70% at 50% 0%, black, transparent 75%);
+  mask: radial-gradient(ellipse 90% 70% at 50% 0%, black, transparent 75%);
+}
+.bg-grid::after {
+  opacity: 0.6;
+  -webkit-mask: radial-gradient(220px circle at var(--cx) calc(var(--cy) + 72px), black, transparent 75%);
+  mask: radial-gradient(220px circle at var(--cx) calc(var(--cy) + 72px), black, transparent 75%);
+}
+
+/* Плёночное зерно и виньетка */
+.bg-grain {
+  inset: -50%;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .95 0 0 0 0 .95 0 0 0 0 .96 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.045; animation: grain 1.2s steps(6) infinite;
+}
+@keyframes grain {
+  0% { transform: translate3d(0, 0, 0); } 20% { transform: translate3d(-6%, 4%, 0); } 40% { transform: translate3d(5%, -7%, 0); }
+  60% { transform: translate3d(-3%, 8%, 0); } 80% { transform: translate3d(7%, 2%, 0); } 100% { transform: translate3d(-5%, -4%, 0); }
+}
+.page-bg::after { content: ""; position: absolute; inset: 0; background: radial-gradient(ellipse 120% 90% at 50% 40%, transparent 55%, var(--overlay) 100%); }
+@media (prefers-reduced-motion: reduce) {
+  .bg-aura::before, .bg-aura::after, .bg-grain { animation: none; }
+}
 
 /* 3D-наклон окна продукта */
 .app-window.tilt { transform-origin: 40% 50%; will-change: transform; }

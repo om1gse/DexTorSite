@@ -10,6 +10,7 @@
     edgeHot: '#5A5A6E',   // Будущий этап
     node: '#5A5A6E',
     nodeHot: '#A6A6BC',   // Второстепенный текст
+    progress: '#E7E7EC',  // Прогресс
     green: '#3DDC97',     // Зелёный основной
     greenLight: '#7AF0BE' // Зелёный светлый
   };
@@ -56,32 +57,63 @@
   }
 
   /* ---------- Живая сеть Tor на всю страницу ----------
-     Один закреплённый холст за контентом; узлы живут в координатах документа,
-     поэтому при прокрутке сеть непрерывно перетекает из блока в блок.
-     Под текстовыми блоками сеть плавно гаснет — она заполняет только пустые места. */
+     Закреплённый фон за контентом из нескольких слоёв:
+     сиреневый свет и сетка (CSS) → объёмная сеть на холсте → зерно и виньетка.
+     Узлы лежат на разной глубине: дальние мельче, тусклее и медленнее едут при прокрутке.
+     Сеть живёт сама: по экрану бродят источники света, по узлам идут Tor-цепочки
+     (3–4 хопа), регулярно расходятся волны-сканеры, узлы мерцают.
+     Курсор лишь слегка добавляет свет и раздвигает узлы. Под текстом сеть притушена. */
   var QUIET_ZONES = [
     '.header-inner', '.hero-copy', '.section-head', '.rm-teaser-head', '.stack', '.stats-grid',
     '.tour-steps', '.tour-caption', '.security-grid > div:first-child', '.statement .container',
     '.faq-aside', '.foot-grid', '.foot-bottom', '.rp-hero .container', '.phase-aside', '.cta-card'
   ].join(',');
+  var NO_PULSE = 'a, button, input, textarea, select, summary, label, [role="button"], .app-window, .panel, .feature, .rm-card';
+
+  // Мягкое пятно света для аддитивного свечения (рисуется один раз)
+  function glowSprite(inner, outer) {
+    var c = document.createElement('canvas'), s = 128, g = c.getContext('2d');
+    c.width = c.height = s;
+    var grd = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+    grd.addColorStop(0, inner); grd.addColorStop(0.25, outer); grd.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = grd; g.fillRect(0, 0, s, s);
+    return c;
+  }
 
   function pageNetwork() {
-    var canvas = document.createElement('canvas');
-    canvas.className = 'page-net';
-    canvas.setAttribute('aria-hidden', 'true');
-    document.body.prepend(canvas);
+    var bg = document.createElement('div');
+    bg.className = 'page-bg';
+    bg.setAttribute('aria-hidden', 'true');
+    bg.innerHTML = '<div class="bg-aura"></div><div class="bg-grid"></div><canvas></canvas><div class="bg-grain"></div>';
+    document.body.prepend(bg);
+    var canvas = bg.querySelector('canvas');
     var ctx = canvas.getContext('2d');
 
-    var LINK = 155, HOT = 180, FALLOFF = 80, QUIET = 0.1, DENSITY = 10500;
-    var vw = 0, vh = 0, docH = 0, nodes = [], packets = [], zones = [];
-    var mouse = { cx: -1e4, cy: -1e4 };
-    var raf = 0, lastSpawn = 0, lastZones = 0;
+    var GLOW_GREEN = glowSprite('rgba(122,240,190,0.95)', 'rgba(61,220,151,0.4)');
+    var GLOW_WHITE = glowSprite('rgba(231,231,236,0.8)', 'rgba(166,166,188,0.22)');
+    var GLOW_LILAC = glowSprite('rgba(214,196,255,0.55)', 'rgba(214,196,255,0.16)');
 
-    function dist(a, b) { var dx = a.x - b.x, dy = a.y - b.y; return Math.sqrt(dx * dx + dy * dy); }
-    function makeNode(yMin, yMax) {
-      var a = Math.random() * Math.PI * 2, s = 0.05 + Math.random() * 0.12;
-      return { x: Math.random() * vw, y: yMin + Math.random() * (yMax - yMin), vx: Math.cos(a) * s, vy: Math.sin(a) * s,
-               r: 1 + Math.random() * 1.3, flash: 0, f: 1 };
+    var LINK = 180, WARP_R = 180, WARP = 14, FALLOFF = 90, QUIET = 0.22, DENSITY = 6400;
+    var LIGHT_R = 340, MOUSE_R = 200, MOUSE_K = 0.4; // мышь — лишь небольшая добавка
+    var PULSE_SPEED = 0.5, PULSE_BAND = 90;
+    var vw = 0, vh = 0, docH = 0, nodes = [], packets = [], pulses = [], zones = [], lights = [];
+    var mouse = { cx: -1e4, cy: -1e4, ex: -1e4, ey: -1e4 };
+    var raf = 0, lastSpawn = 0, lastZones = 0, nextPulse = 0, lastSy = window.scrollY;
+
+    // блуждающие источники света: плавные фигуры Лиссажу, у каждого свой ритм
+    for (var li = 0; li < 3; li++) {
+      lights.push({ ax: 0.000071 + li * 0.000023, ay: 0.000097 - li * 0.000019,
+                    px: Math.random() * 6.28, py: Math.random() * 6.28, x: 0, y: 0 });
+    }
+
+    function layerH(par) { return vh + Math.max(0, docH - vh) * par; }
+    function makeNode() {
+      var z = Math.pow(Math.random(), 0.8), a = Math.random() * Math.PI * 2, s = 0.05 + Math.random() * 0.14;
+      var par = 0.3 + 0.7 * z;
+      return { x: Math.random() * vw, y: Math.random() * layerH(par), z: z, par: par,
+               vx: Math.cos(a) * s * (0.5 + z), vy: Math.sin(a) * s * (0.5 + z),
+               r: 0.6 + z * 1.8, tw: Math.random() * 6.28, ts: 0.6 + Math.random() * 1.6,
+               flash: 0, lit: 0, light: 0, f: 1, ox: 0, oy: 0, sx: 0, sy: 0 };
     }
 
     function measureZones() {
@@ -96,27 +128,30 @@
 
     function resize() {
       var dpr = Math.min(2, window.devicePixelRatio || 1);
+      var oldH = docH, oldVh = vh;
       vw = window.innerWidth; vh = window.innerHeight;
       canvas.width = Math.round(vw * dpr); canvas.height = Math.round(vh * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      var newH = document.documentElement.scrollHeight;
-      var count = Math.round(Math.min(1800, (vw * newH) / DENSITY));
-      if (newH > docH && nodes.length) { // страница выросла — досеять узлы в новую часть
-        while (nodes.length < count) nodes.push(makeNode(docH, newH));
-      }
-      docH = newH;
-      while (nodes.length < count) nodes.push(makeNode(0, docH));
+      docH = document.documentElement.scrollHeight;
+      // узлы растягиваются вместе со своим слоем, чтобы не сбиваться в кучу
+      if (oldH) nodes.forEach(function (n) {
+        var before = oldVh + Math.max(0, oldH - oldVh) * n.par;
+        n.y *= layerH(n.par) / Math.max(before, 1);
+        if (n.x > vw) n.x = Math.random() * vw;
+      });
+      var count = Math.round(Math.min(2400, vw * layerH(0.65) / DENSITY));
+      while (nodes.length < count) nodes.push(makeNode());
       nodes.length = count;
-      nodes.forEach(function (n) { if (n.x > vw) n.x = Math.random() * vw; if (n.y > docH) n.y = Math.random() * docH; });
+      nodes.sort(function (a, b) { return a.z - b.z; }); // дальние рисуются первыми
       measureZones();
     }
 
     // 1 — свободное место, QUIET — под текстом, плавный переход на расстоянии FALLOFF
-    function openness(n) {
+    function openness(x, y, sz) {
       var f = 1;
-      for (var i = 0; i < zones.length; i++) {
-        var z = zones[i];
-        var dx = Math.max(z.x1 - n.x, 0, n.x - z.x2), dy = Math.max(z.y1 - n.y, 0, n.y - z.y2);
+      for (var i = 0; i < sz.length; i++) {
+        var z = sz[i];
+        var dx = Math.max(z.x1 - x, 0, x - z.x2), dy = Math.max(z.y1 - y, 0, y - z.y2);
         if (dx > FALLOFF || dy > FALLOFF) continue;
         var d = Math.sqrt(dx * dx + dy * dy);
         if (d < FALLOFF) f = Math.min(f, QUIET + (1 - QUIET) * (d / FALLOFF));
@@ -124,100 +159,239 @@
       return f;
     }
 
-    function spawn(visible) {
-      if (visible.length < 4) return;
-      var first = visible[Math.floor(Math.random() * visible.length)];
-      if (first.f < 0.6) return; // пакеты стартуют только на свободных участках
-      var path = [first];
-      for (var h = 0; h < 3; h++) {
+    // освещённость точки: блуждающие источники + немного от курсора
+    function lightAt(x, y) {
+      var best = 0, i, dx, dy, d2, k;
+      for (i = 0; i < lights.length; i++) {
+        dx = x - lights[i].x; dy = y - lights[i].y; d2 = dx * dx + dy * dy;
+        if (d2 < LIGHT_R * LIGHT_R) { k = 1 - Math.sqrt(d2) / LIGHT_R; k *= k; if (k > best) best = k; }
+      }
+      dx = x - mouse.cx; dy = y - mouse.cy; d2 = dx * dx + dy * dy;
+      if (d2 < MOUSE_R * MOUSE_R) { k = 1 - Math.sqrt(d2) / MOUSE_R; k = k * k * MOUSE_K; best = Math.min(1, best + k); }
+      return best;
+    }
+
+    function sdist(a, b) { var dx = a.sx - b.sx, dy = a.sy - b.sy; return Math.sqrt(dx * dx + dy * dy); }
+
+    function spawnPacket(visible, now) {
+      var pool = visible.filter(function (n) { return n.z > 0.35 && n.f > 0.55; });
+      if (pool.length < 4) return;
+      var path = [pool[Math.floor(Math.random() * pool.length)]];
+      var hops = 3 + (Math.random() < 0.5 ? 1 : 0); // guard → middle → exit (+ иногда ещё один)
+      for (var h = 0; h < hops; h++) {
         var cur = path[path.length - 1];
-        var options = visible.filter(function (m) { return path.indexOf(m) < 0 && m.f > 0.4 && dist(cur, m) < LINK; });
+        var options = pool.filter(function (m) {
+          var d = sdist(cur, m);
+          return path.indexOf(m) < 0 && Math.abs(m.z - cur.z) < 0.34 && d < LINK * 1.2 && d > 50;
+        });
         if (!options.length) break;
         path.push(options[Math.floor(Math.random() * options.length)]);
       }
       if (path.length < 3) return;
-      first.flash = 1;
-      packets.push({ path: path, seg: 0, t: 0, trail: [] });
+      path[0].flash = 1;
+      packets.push({ path: path, seg: 0, t: 0, trail: [], born: now, end: 0, speed: 2.4 + Math.random() * 1.6 });
+    }
+
+    function addPulse(x, y, now, k) {
+      pulses.push({ x: x, y: y, t0: now, r: 0, max: Math.hypot(vw, vh) * (0.45 + 0.3 * k), k: k });
     }
 
     function draw(now, animate) {
-      var sy = window.scrollY;
-      var top = sy - LINK, bottom = sy + vh + LINK;
-      var m = { x: mouse.cx, y: mouse.cy + sy }; // курсор в координатах документа
+      var sy = window.scrollY, dScroll = sy - lastSy;
+      lastSy = sy;
       ctx.clearRect(0, 0, vw, vh);
       if (now - lastZones > 1200) measureZones(); // раскрытые FAQ, смена языка и т. п.
 
-      var visible = [], i, j, a, b, d;
+      // свет и сетка под курсором (CSS-слои), с инерцией
+      if (mouse.cx < -1000 || mouse.ex < -1000) { mouse.ex = mouse.cx; mouse.ey = mouse.cy; }
+      else { mouse.ex += (mouse.cx - mouse.ex) * 0.12; mouse.ey += (mouse.cy - mouse.ey) * 0.12; }
+      bg.style.setProperty('--cx', mouse.ex.toFixed(1) + 'px');
+      bg.style.setProperty('--cy', mouse.ey.toFixed(1) + 'px');
+      bg.style.setProperty('--gy', (-(sy * 0.18) % 72).toFixed(1) + 'px');
+
+      lights.forEach(function (l) {
+        l.x = vw * (0.5 + 0.46 * Math.sin(now * l.ax + l.px));
+        l.y = vh * (0.5 + 0.44 * Math.sin(now * l.ay + l.py));
+      });
+
+      var sz = [], i, j, a, b, d, n;
+      for (i = 0; i < zones.length; i++) {
+        var zz = zones[i];
+        if (zz.y2 - sy > -LINK && zz.y1 - sy < vh + LINK) sz.push({ x1: zz.x1, y1: zz.y1 - sy, x2: zz.x2, y2: zz.y2 - sy });
+      }
+
+      // волны-сканеры
+      for (i = pulses.length - 1; i >= 0; i--) {
+        pulses[i].r = (now - pulses[i].t0) * PULSE_SPEED;
+        if (pulses[i].r > pulses[i].max) pulses.splice(i, 1);
+      }
+
+      var visible = [], m = { x: mouse.cx, y: mouse.cy };
       for (i = 0; i < nodes.length; i++) {
-        var n = nodes[i];
+        n = nodes[i];
+        var lh = layerH(n.par);
         if (animate) {
           n.x += n.vx; n.y += n.vy;
           if (n.x < -20) n.x = vw + 20; else if (n.x > vw + 20) n.x = -20;
-          if (n.y < -20) n.y = docH + 20; else if (n.y > docH + 20) n.y = -20;
-          n.flash *= 0.95;
+          if (n.y < -20) n.y = lh + 20; else if (n.y > lh + 20) n.y = -20;
+          n.flash *= 0.955; n.lit *= 0.94;
         }
-        if (n.y > top && n.y < bottom) { n.f = openness(n); visible.push(n); }
+        var bx = n.x, by = n.y - sy * n.par;
+        if (by < -LINK || by > vh + LINK) continue;
+        // лёгкая линза у курсора
+        var tx = 0, ty = 0, dx = bx - m.x, dy = by - m.y, d2 = dx * dx + dy * dy;
+        if (d2 < WARP_R * WARP_R && d2 > 1) {
+          d = Math.sqrt(d2);
+          var k = 1 - d / WARP_R; k = k * k * WARP * (0.3 + n.z);
+          tx = dx / d * k; ty = dy / d * k;
+        }
+        n.ox += (tx - n.ox) * 0.1; n.oy += (ty - n.oy) * 0.1;
+        n.sx = bx + n.ox; n.sy = by + n.oy;
+        for (j = 0; j < pulses.length; j++) {
+          var p0 = pulses[j], pd = Math.abs(Math.hypot(n.sx - p0.x, n.sy - p0.y) - p0.r);
+          if (pd < PULSE_BAND) n.lit = Math.max(n.lit, (1 - pd / PULSE_BAND) * (1 - p0.r / p0.max) * p0.k);
+        }
+        n.light = lightAt(n.sx, n.sy);
+        n.f = openness(n.sx, n.sy, sz);
+        visible.push(n);
       }
 
-      // связи
-      ctx.lineWidth = 1;
+      // ореолы блуждающих источников
+      ctx.globalCompositeOperation = 'lighter';
+      lights.forEach(function (l) {
+        ctx.globalAlpha = 0.16;
+        ctx.drawImage(GLOW_LILAC, l.x - LIGHT_R * 1.3, l.y - LIGHT_R * 1.3, LIGHT_R * 2.6, LIGHT_R * 2.6);
+      });
+      ctx.globalCompositeOperation = 'source-over';
+
+      // кольца волн: широкий мягкий ореол + тонкий фронт
+      pulses.forEach(function (p) {
+        var fade = 1 - p.r / p.max;
+        ctx.strokeStyle = KIT.nodeHot;
+        ctx.lineWidth = 10; ctx.globalAlpha = 0.035 * fade * p.k;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.stroke();
+        ctx.lineWidth = 1.2; ctx.globalAlpha = 0.28 * fade * p.k;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.stroke();
+        if (p.r > 22) {
+          ctx.lineWidth = 1; ctx.globalAlpha = 0.09 * fade * p.k;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.r - 22, 0, Math.PI * 2); ctx.stroke();
+        }
+      });
+
+      // связи — только между узлами близкой глубины
       for (i = 0; i < visible.length; i++) {
         a = visible[i];
         for (j = i + 1; j < visible.length; j++) {
           b = visible[j];
-          if (Math.abs(a.y - b.y) >= LINK) continue;
-          d = dist(a, b);
-          if (d >= LINK) continue;
-          var f = Math.min(a.f, b.f);
-          var mx = (a.x + b.x) / 2 - m.x, my = (a.y + b.y) / 2 - m.y;
-          var hot = mx * mx + my * my < HOT * HOT;
-          ctx.globalAlpha = (1 - d / LINK) * (hot ? 0.95 : 0.7) * f;
-          ctx.strokeStyle = hot ? KIT.edgeHot : KIT.edge;
-          ctx.beginPath(); ctx.moveTo(a.x, a.y - sy); ctx.lineTo(b.x, b.y - sy); ctx.stroke();
+          if (b.z - a.z > 0.34) break; // массив отсортирован по глубине
+          var zm = (a.z + b.z) / 2, L = LINK * (0.65 + 0.45 * zm);
+          if (Math.abs(a.sy - b.sy) >= L || Math.abs(a.sx - b.sx) >= L) continue;
+          d = sdist(a, b);
+          if (d >= L) continue;
+          var f = Math.min(a.f, b.f), near = 1 - d / L;
+          var lit = Math.min(a.lit, b.lit), lv = (a.light + b.light) / 2;
+          var lvl = Math.max(lit, lv) + zm * 0.15;
+          ctx.lineWidth = 0.5 + zm * 0.8 + lit * 0.6;
+          ctx.strokeStyle = lit > 0.25 ? KIT.progress : lvl > 0.45 ? KIT.nodeHot : lvl > 0.18 ? KIT.edgeHot : KIT.edge;
+          ctx.globalAlpha = Math.min(1, near * (0.3 + 0.7 * zm) * (1 + lv * 1.4) + lit * near * 0.8) * f;
+          ctx.beginPath(); ctx.moveTo(a.sx, a.sy); ctx.lineTo(b.sx, b.sy); ctx.stroke();
         }
       }
 
-      // узлы
+      // узлы: мерцание + свет источников
+      ctx.lineWidth = 1.5;
       visible.forEach(function (n) {
-        var hot = dist(n, m) < HOT;
-        ctx.globalAlpha = (hot ? 1 : 0.85) * n.f;
-        ctx.fillStyle = hot ? KIT.nodeHot : KIT.node;
-        ctx.beginPath(); ctx.arc(n.x, n.y - sy, n.r + (hot ? 0.6 : 0), 0, Math.PI * 2); ctx.fill();
+        var tw = 0.7 + 0.3 * Math.sin(now * 0.0015 * n.ts + n.tw);
+        var lv = Math.max(n.light, n.lit);
+        if (n.z > 0.86) { // ближний слой — мягкое боке
+          ctx.globalAlpha = (0.14 + n.light * 0.2) * n.f;
+          ctx.drawImage(GLOW_LILAC, n.sx - 16, n.sy - 16, 32, 32);
+        }
+        ctx.globalAlpha = Math.min(1, (0.35 + 0.6 * n.z) * tw + lv * 0.7) * n.f;
+        ctx.fillStyle = lv > 0.5 ? KIT.progress : lv > 0.15 ? KIT.nodeHot : KIT.node;
+        ctx.beginPath(); ctx.arc(n.sx, n.sy, n.r + lv * 1.1, 0, Math.PI * 2); ctx.fill();
         if (n.flash > 0.03) {
-          ctx.globalAlpha = n.flash * 0.8 * n.f;
+          ctx.globalAlpha = n.flash * 0.9 * n.f;
           ctx.strokeStyle = KIT.green;
-          ctx.beginPath(); ctx.arc(n.x, n.y - sy, n.r + (1 - n.flash) * 16, 0, Math.PI * 2); ctx.stroke();
+          ctx.beginPath(); ctx.arc(n.sx, n.sy, n.r + (1 - n.flash) * 36, 0, Math.PI * 2); ctx.stroke();
         }
       });
 
-      // пакеты
-      if (animate) {
-        for (i = packets.length - 1; i >= 0; i--) {
-          var p = packets[i];
-          a = p.path[p.seg]; b = p.path[p.seg + 1];
-          p.t += 1.9 / Math.max(dist(a, b), 1);
-          if (p.t >= 1) {
-            b.flash = 1; p.seg++; p.t = 0;
-            if (p.seg >= p.path.length - 1) { packets.splice(i, 1); continue; }
-            a = p.path[p.seg]; b = p.path[p.seg + 1];
-          }
-          var x = a.x + (b.x - a.x) * p.t, y = a.y + (b.y - a.y) * p.t;
-          var pf = Math.min(a.f, b.f);
-          p.trail.push([x, y]);
-          if (p.trail.length > 16) p.trail.shift();
-          ctx.lineWidth = 1.5;
-          ctx.strokeStyle = KIT.green;
-          for (j = 1; j < p.trail.length; j++) {
-            ctx.globalAlpha = (j / p.trail.length) * 0.7 * pf;
-            ctx.beginPath(); ctx.moveTo(p.trail[j - 1][0], p.trail[j - 1][1] - sy); ctx.lineTo(p.trail[j][0], p.trail[j][1] - sy); ctx.stroke();
-          }
-          ctx.globalAlpha = pf;
-          ctx.fillStyle = KIT.greenLight;
-          ctx.beginPath(); ctx.arc(x, y - sy, 2.2, 0, Math.PI * 2); ctx.fill();
+      // свечение: узлы под волной и светом, вспышки хопов
+      ctx.globalCompositeOperation = 'lighter';
+      visible.forEach(function (n) {
+        var lv = Math.max(n.lit, n.light * 0.7);
+        if (lv > 0.2 && n.z > 0.3) {
+          var s = 8 + 18 * n.z * lv;
+          ctx.globalAlpha = lv * 0.6 * n.f;
+          ctx.drawImage(GLOW_WHITE, n.sx - s, n.sy - s, s * 2, s * 2);
         }
-        // частота пакетов растёт с площадью экрана
-        var maxPackets = Math.max(3, Math.round(vw * vh / 180000));
-        if (now - lastSpawn > 650 && packets.length < maxPackets) { spawn(visible); lastSpawn = now; }
+        if (n.flash > 0.1) {
+          var g = 10 + 26 * n.flash;
+          ctx.globalAlpha = n.flash * 0.7 * n.f;
+          ctx.drawImage(GLOW_GREEN, n.sx - g, n.sy - g, g * 2, g * 2);
+        }
+      });
+      ctx.globalCompositeOperation = 'source-over';
+
+      // Tor-цепочки
+      for (i = packets.length - 1; i >= 0; i--) {
+        var p = packets[i], path = p.path, last = path.length - 1;
+        if (path.some(function (q) { return q.sy < -LINK * 1.5 || q.sy > vh + LINK * 1.5; })) { packets.splice(i, 1); continue; }
+        var fadeIn = Math.min(1, (now - p.born) / 300);
+        var fadeOut = p.end ? 1 - (now - p.end) / 900 : 1;
+        if (fadeOut <= 0) { packets.splice(i, 1); continue; }
+        var pf = Math.max(0.35, Math.min(path[0].f, path[last].f, path[Math.min(p.seg + 1, last)].f)) * fadeIn * fadeOut;
+
+        // сама цепочка: пройденные хопы ярче
+        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = KIT.green;
+        for (j = 0; j < last; j++) {
+          ctx.globalAlpha = (j < p.seg || p.end ? 0.55 : j === p.seg ? 0.32 : 0.12) * pf;
+          ctx.beginPath(); ctx.moveTo(path[j].sx, path[j].sy); ctx.lineTo(path[j + 1].sx, path[j + 1].sy); ctx.stroke();
+        }
+
+        a = path[p.seg]; b = path[Math.min(p.seg + 1, last)];
+        if (animate && !p.end) {
+          p.t += p.speed / Math.max(sdist(a, b), 1);
+          if (p.t >= 1) {
+            b.flash = 1; b.lit = Math.max(b.lit, 0.5); p.seg++; p.t = 0;
+            if (p.seg >= last) { p.end = now; p.seg = last; b.lit = 1; addPulse(b.sx, b.sy, now, 0.35); }
+            a = path[p.seg]; b = path[Math.min(p.seg + 1, last)];
+          }
+        }
+        var x = a.sx + (b.sx - a.sx) * p.t, y = a.sy + (b.sy - a.sy) * p.t;
+        for (j = 0; j < p.trail.length; j++) p.trail[j][1] -= dScroll * a.par; // след едет вместе со слоем при прокрутке
+        if (!p.end) { p.trail.push([x, y]); if (p.trail.length > 30) p.trail.shift(); }
+        else if (p.trail.length) p.trail.splice(0, 2);
+
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.lineWidth = 2.2;
+        for (j = 1; j < p.trail.length; j++) {
+          ctx.globalAlpha = Math.pow(j / p.trail.length, 1.5) * 0.9 * pf;
+          ctx.beginPath(); ctx.moveTo(p.trail[j - 1][0], p.trail[j - 1][1]); ctx.lineTo(p.trail[j][0], p.trail[j][1]); ctx.stroke();
+        }
+        if (!p.end) {
+          ctx.globalAlpha = pf;
+          ctx.drawImage(GLOW_GREEN, x - 22, y - 22, 44, 44);
+          ctx.fillStyle = KIT.greenLight;
+          ctx.beginPath(); ctx.arc(x, y, 2.4, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalCompositeOperation = 'source-over';
+      }
+
+      if (animate) {
+        // частота цепочек растёт с площадью экрана
+        var maxPackets = Math.max(4, Math.round(vw * vh / 85000));
+        if (now - lastSpawn > 260 && packets.length < maxPackets) { spawnPacket(visible, now); lastSpawn = now; }
+        if (now > nextPulse) { // волна из-под одного из источников света или из свободного места
+          if (Math.random() < 0.5) { var l = lights[Math.floor(Math.random() * lights.length)]; addPulse(l.x, l.y, now, 1); }
+          else {
+            var open = visible.filter(function (q) { return q.f > 0.9 && q.z > 0.5; });
+            if (open.length) { var src = open[Math.floor(Math.random() * open.length)]; addPulse(src.sx, src.sy, now, 1); }
+          }
+          nextPulse = now + 2600 + Math.random() * 2200;
+        }
       }
       ctx.globalAlpha = 1;
     }
@@ -245,7 +419,13 @@
 
     window.addEventListener('pointermove', function (e) { mouse.cx = e.clientX; mouse.cy = e.clientY; }, { passive: true });
     document.addEventListener('pointerleave', function () { mouse.cx = mouse.cy = -1e4; });
+    // клик по пустому месту запускает небольшую волну
+    document.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0 || (e.target.closest && e.target.closest(NO_PULSE))) return;
+      addPulse(e.clientX, e.clientY, performance.now(), 0.6);
+    });
     document.addEventListener('visibilitychange', function () { if (document.hidden) stop(); else start(); });
+    nextPulse = performance.now() + 700;
     start();
   }
 
