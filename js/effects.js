@@ -429,17 +429,15 @@
     start();
   }
 
-  /* ---------- 3D-наклон окна продукта ---------- */
-  function heroTilt() {
+  /* ---------- Параллакс плашки «Образ проверен» (окно продукта остаётся плоским) ---------- */
+  function heroParallax() {
     var hero = document.querySelector('.hero');
-    var win = document.querySelector('.hero-visual .app-window');
     var card = document.querySelector('.float-card');
-    if (!hero || !win || reduce || !finePointer) return;
+    if (!hero || !card || reduce || !finePointer) return;
     var tx = 0, ty = 0, cx = 0, cy = 0, raf = 0;
     function render() {
       cx += (tx - cx) * 0.08; cy += (ty - cy) * 0.08;
-      win.style.transform = 'perspective(1600px) rotateY(' + (-7 + cx * 9).toFixed(2) + 'deg) rotateX(' + (3 - cy * 7).toFixed(2) + 'deg)';
-      if (card) card.style.transform = 'translate3d(' + (cx * -22).toFixed(1) + 'px,' + (cy * -16).toFixed(1) + 'px,0)';
+      card.style.transform = 'translate3d(' + (cx * -22).toFixed(1) + 'px,' + (cy * -16).toFixed(1) + 'px,0)';
       if (Math.abs(tx - cx) > 0.001 || Math.abs(ty - cy) > 0.001) raf = requestAnimationFrame(render); else raf = 0;
     }
     function kick() { if (!raf) raf = requestAnimationFrame(render); }
@@ -450,8 +448,6 @@
       kick();
     });
     hero.addEventListener('pointerleave', function () { tx = 0; ty = 0; kick(); });
-    win.classList.add('tilt');
-    render();
   }
 
   /* ---------- Подсветка рамок карточек за курсором ---------- */
@@ -522,7 +518,7 @@
   };
 
   pageNetwork();
-  heroTilt();
+  heroParallax();
   spotlight('.features', '.feature');
   spotlight('.rm-cards', '.rm-card');
   securityScan();

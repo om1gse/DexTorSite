@@ -592,6 +592,18 @@ h1, h2, h3, h4, p { margin: 0; }
   .tour-caption { flex-direction: column; gap: 4px; }
 }
 
+/* Шахматный порядок: иллюстрации чередуются справа и слева
+   (hero — справа, «Как это работает» — слева, безопасность — справа, дуги — слева) */
+@media (min-width: 1101px) {
+  .tour { grid-template-columns: minmax(0, 1.18fr) minmax(0, 0.82fr); }
+  .tour-visual { order: -1; }
+}
+@media (min-width: 861px) {
+  .statement .container { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 640px); justify-items: start; }
+  .statement .container > * { grid-column: 2; }
+  .arcs { right: auto; left: -8%; transform: translateY(-50%) scaleX(-1); }
+}
+
 .section-last { padding-bottom: 96px; }
 
 /* ==========================================================================
@@ -829,8 +841,7 @@ main, .site-footer { position: relative; z-index: 1; }
   .bg-aura::before, .bg-aura::after, .bg-grain { animation: none; }
 }
 
-/* 3D-наклон окна продукта */
-.app-window.tilt { transform-origin: 40% 50%; will-change: transform; }
+/* Параллакс плашки в hero */
 .float-card { will-change: transform; }
 
 /* Подсветка рамки карточек за курсором */
