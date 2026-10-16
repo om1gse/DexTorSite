@@ -5,15 +5,6 @@
 
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var finePointer = window.matchMedia('(pointer: fine)').matches;
-  var KIT = {
-    edge: '#3B384B',      // Рамка поля
-    edgeHot: '#5A5A6E',   // Будущий этап
-    node: '#5A5A6E',
-    nodeHot: '#A6A6BC',   // Второстепенный текст
-    progress: '#E7E7EC',  // Прогресс
-    green: '#3DDC97',     // Зелёный основной
-    greenLight: '#7AF0BE' // Зелёный светлый
-  };
 
   /* ---------- «Расшифровка» текста ---------- */
   var GLYPHS = { upper: 'ABCDEFGHJKLMNPQRSTUVWXYZ', lower: 'abcdefghjkmnpqrstuvwxyz', digit: '0123456789' };
@@ -56,376 +47,256 @@
     requestAnimationFrame(frame);
   }
 
-  /* ---------- Живая сеть Tor на всю страницу ----------
-     Закреплённый фон за контентом из нескольких слоёв:
-     сиреневый свет и сетка (CSS) → объёмная сеть на холсте → зерно и виньетка.
-     Узлы лежат на разной глубине: дальние мельче, тусклее и медленнее едут при прокрутке.
-     Сеть живёт сама: по экрану бродят источники света, по узлам идут Tor-цепочки
-     (3–4 хопа), регулярно расходятся волны-сканеры, узлы мерцают.
-     Курсор лишь слегка добавляет свет и раздвигает узлы. Под текстом сеть притушена. */
-  var QUIET_ZONES = [
-    '.header-inner', '.hero-copy', '.section-head', '.rm-teaser-head', '.stack', '.stats-grid',
-    '.tour-steps', '.tour-caption', '.security-grid > div:first-child', '.statement .container',
-    '.faq-aside', '.foot-grid', '.foot-bottom', '.rp-hero .container', '.phase-aside', '.cta-card'
-  ].join(',');
-  var NO_PULSE = 'a, button, input, textarea, select, summary, label, [role="button"], .app-window, .panel, .feature, .rm-card';
+  /* ---------- Туман на всю страницу (WebGL) ----------
+     Дымка медленно течёт сама. Курсор рассеивает её, но через пару секунд
+     просвет затягивается обратно — «без следов». Внутри тумана висят узлы Tor:
+     мягкие источники света, между которыми изредка пробегает зелёный импульс
+     (guard → middle → exit). В просветах едва проступает шифротекст.
+     Весь фон — один холст: виньетка считается в шейдере, без лишних слоёв поверх.
+     Цвета: фон #0E0F13, сиреневый --lilac, серый #A6A6BC, зелёный #3DDC97. */
+  var FOG_VERT = 'attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}';
+  var FOG_FRAG = [
+    '#ifdef GL_FRAGMENT_PRECISION_HIGH',
+    'precision highp float;',
+    '#else',
+    'precision mediump float;',
+    '#endif',
+    'uniform vec2 uRes; uniform float uTime, uScroll, uScrollPx, uDensity, uClearR;',
+    'uniform vec3 uTrail[24]; uniform vec3 uLights[4]; uniform vec3 uPacket;',
+    'uniform sampler2D uGlyphs;',
+    'float hash(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}',
+    'float noise(vec2 p){vec2 i=floor(p),f=fract(p),u=f*f*(3.-2.*f);',
+    '  return mix(mix(hash(i),hash(i+vec2(1,0)),u.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),u.x),u.y);}',
+    'float fbm(vec2 p){float v=0.,a=.5;mat2 m=mat2(1.6,1.2,-1.2,1.6);',
+    '  for(int i=0;i<4;i++){v+=a*noise(p);p=m*p;a*=.5;}return v;}',
+    'void main(){',
+    '  vec2 frag=gl_FragCoord.xy; vec2 uv=frag/uRes.y; float t=uTime;',
+    // курсор: просвет + лёгкое расталкивание дымки
+    '  float clear=0.; vec2 push=vec2(0.);',
+    '  for(int i=0;i<24;i++){vec2 d=frag-uTrail[i].xy;float g=uTrail[i].z*exp(-dot(d,d)/(uClearR*uClearR));',
+    '    clear+=g; push+=d/uRes.y*g;}',
+    '  clear=clamp(clear,0.,1.);',
+    '  vec2 p=uv*1.1-vec2(0.,uScroll)-push*.5;',
+    // доменное искажение даёт клубящиеся, текучие формы
+    '  vec2 q=vec2(fbm(p+vec2(0.,t*.035)),fbm(p+vec2(5.2,1.3)-t*.028));',
+    '  float f=fbm(p+3.2*q+vec2(1.7,9.2)+t*.05);',
+    '  float fog=smoothstep(.32,.95,f)*.85+f*.15;',
+    '  fog*=(1.-clear*.92)*uDensity;',
+    '  vec3 bg=vec3(.0549,.0588,.0745);',
+    '  vec3 lilac=vec3(.839,.769,1.); vec3 grey=vec3(.651,.651,.737); vec3 green=vec3(.239,.863,.592);',
+    '  vec3 tint=mix(grey,lilac,clamp(q.y*1.8-.4,0.,1.));',
+    '  vec3 col=bg+tint*fog*.105;',
+    // узлы Tor подсвечивают туман изнутри
+    '  for(int i=0;i<4;i++){vec2 d=(frag-uLights[i].xy)/uRes.y;float li=uLights[i].z*exp(-dot(d,d)/.05);',
+    '    col+=tint*fog*li*.34+lilac*li*.01;}',
+    // зелёный импульс между узлами
+    '  vec2 dp=(frag-uPacket.xy)/uRes.y;float pd=dot(dp,dp);',
+    '  col+=green*uPacket.z*(exp(-pd/.00012)*.5+exp(-pd/.01)*fog*.55);',
+    // шифротекст: проявляется в основном там, где прошла мышь
+    '  float g=texture2D(uGlyphs,fract(vec2(frag.x,frag.y-uScrollPx)/512.)).a;',
+    '  col+=grey*g*(clear*.075+(1.-smoothstep(0.,.35,fog))*.012);',
+    // виньетка (раньше была отдельным CSS-слоем — лишний слой давал артефакты при прокрутке)
+    '  vec2 vn=(frag/uRes-vec2(.5,.6))/vec2(1.2,.9);',
+    '  col=mix(col,vec3(.0235,.0275,.0392),clamp((length(vn)-.55)/.45,0.,1.)*.72);',
+    '  col+=(hash(frag+fract(t))-.5)/255.;', // дизеринг против полос на градиентах
+    '  gl_FragColor=vec4(col,1.);',
+    '}'
+  ].join('\n');
 
-  // Мягкое пятно света для аддитивного свечения (рисуется один раз)
-  function glowSprite(inner, outer) {
-    var c = document.createElement('canvas'), s = 128, g = c.getContext('2d');
-    c.width = c.height = s;
-    var grd = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
-    grd.addColorStop(0, inner); grd.addColorStop(0.25, outer); grd.addColorStop(1, 'rgba(0,0,0,0)');
-    g.fillStyle = grd; g.fillRect(0, 0, s, s);
-    return c;
-  }
-
-  function pageNetwork() {
+  function pageFog() {
     var bg = document.createElement('div');
     bg.className = 'page-bg';
     bg.setAttribute('aria-hidden', 'true');
-    bg.innerHTML = '<div class="bg-aura"></div><div class="bg-grid"></div><canvas></canvas><div class="bg-grain"></div>';
+    bg.innerHTML = '<canvas></canvas>';
     document.body.prepend(bg);
     var canvas = bg.querySelector('canvas');
-    var ctx = canvas.getContext('2d');
+    // alpha: true — непрозрачный растянутый холст Chrome в Windows выносит в аппаратный оверлей,
+    // и при прокрутке часть экрана перестаёт перерисовываться (полосы со старыми кадрами)
+    var gl = canvas.getContext('webgl', { antialias: false, alpha: true, premultipliedAlpha: true, depth: false, powerPreference: 'low-power' });
+    if (!gl) { bg.classList.add('no-gl'); return; }
 
-    var GLOW_GREEN = glowSprite('rgba(122,240,190,0.95)', 'rgba(61,220,151,0.4)');
-    var GLOW_WHITE = glowSprite('rgba(231,231,236,0.8)', 'rgba(166,166,188,0.22)');
-    var GLOW_LILAC = glowSprite('rgba(214,196,255,0.55)', 'rgba(214,196,255,0.16)');
-
-    var LINK = 180, WARP_R = 180, WARP = 14, FALLOFF = 90, QUIET = 0.22, DENSITY = 6400;
-    var LIGHT_R = 340, MOUSE_R = 200, MOUSE_K = 0.4; // мышь — лишь небольшая добавка
-    var PULSE_SPEED = 0.5, PULSE_BAND = 90;
-    var vw = 0, vh = 0, docH = 0, nodes = [], packets = [], pulses = [], zones = [], lights = [];
-    var mouse = { cx: -1e4, cy: -1e4, ex: -1e4, ey: -1e4 };
-    var raf = 0, lastSpawn = 0, lastZones = 0, nextPulse = 0, lastSy = window.scrollY;
-
-    // блуждающие источники света: плавные фигуры Лиссажу, у каждого свой ритм
-    for (var li = 0; li < 3; li++) {
-      lights.push({ ax: 0.000071 + li * 0.000023, ay: 0.000097 - li * 0.000019,
-                    px: Math.random() * 6.28, py: Math.random() * 6.28, x: 0, y: 0 });
+    function shader(type, src) {
+      var s = gl.createShader(type);
+      gl.shaderSource(s, src); gl.compileShader(s);
+      return gl.getShaderParameter(s, gl.COMPILE_STATUS) ? s : null;
     }
+    var vs = shader(gl.VERTEX_SHADER, FOG_VERT), fs = shader(gl.FRAGMENT_SHADER, FOG_FRAG);
+    var prog = gl.createProgram();
+    if (vs && fs) { gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog); }
+    if (!vs || !fs || !gl.getProgramParameter(prog, gl.LINK_STATUS)) { bg.classList.add('no-gl'); return; }
+    gl.useProgram(prog);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    var loc = gl.getAttribLocation(prog, 'a');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    var U = {};
+    ['uRes', 'uTime', 'uScroll', 'uScrollPx', 'uDensity', 'uClearR', 'uTrail', 'uLights', 'uPacket', 'uGlyphs']
+      .forEach(function (n) { U[n] = gl.getUniformLocation(prog, n); });
 
-    function layerH(par) { return vh + Math.max(0, docH - vh) * par; }
-    function makeNode() {
-      var z = Math.pow(Math.random(), 0.8), a = Math.random() * Math.PI * 2, s = 0.05 + Math.random() * 0.14;
-      var par = 0.3 + 0.7 * z;
-      return { x: Math.random() * vw, y: Math.random() * layerH(par), z: z, par: par,
-               vx: Math.cos(a) * s * (0.5 + z), vy: Math.sin(a) * s * (0.5 + z),
-               r: 0.6 + z * 1.8, tw: Math.random() * 6.28, ts: 0.6 + Math.random() * 1.6,
-               flash: 0, lit: 0, light: 0, f: 1, ox: 0, oy: 0, sx: 0, sy: 0 };
+    // слой шифротекста: hex-символы, часть которых время от времени меняется
+    var gc = document.createElement('canvas'), g2 = gc.getContext('2d');
+    gc.width = gc.height = 512;
+    var COLS = 64, ROWS = 32, cells = [], HEX = '0123456789abcdef';
+    for (var ci = 0; ci < COLS * ROWS; ci++) cells.push(Math.random() < 0.55 ? HEX.charAt(Math.floor(Math.random() * 16)) : ' ');
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.uniform1i(U.uGlyphs, 0);
+    function paintGlyphs() {
+      g2.clearRect(0, 0, 512, 512);
+      g2.fillStyle = '#fff';
+      g2.font = '7px ui-monospace, Consolas, monospace';
+      g2.textBaseline = 'top';
+      for (var i = 0; i < cells.length; i++) {
+        if (cells[i] !== ' ') g2.fillText(cells[i], (i % COLS) * 8 + 1, Math.floor(i / COLS) * 16 + 4);
+      }
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, gc);
     }
+    paintGlyphs();
 
-    function measureZones() {
-      var sy = window.scrollY;
-      zones = [];
-      document.querySelectorAll(QUIET_ZONES).forEach(function (el) {
-        var r = el.getBoundingClientRect();
-        if (r.width && r.height) zones.push({ x1: r.left, y1: r.top + sy, x2: r.right, y2: r.bottom + sy });
-      });
-      lastZones = performance.now();
+    var SCALE = finePointer ? 0.38 : 0.28; // туман мягкий — считаем в пониженном разрешении
+    var vw = 0, vh = 0, raf = 0, t0 = performance.now();
+    var trail = [], trailBuf = new Float32Array(24 * 3), lightBuf = new Float32Array(4 * 3);
+    var mouse = { x: -1e4, y: -1e4, lastX: -1e4, lastY: -1e4, lastT: 0 };
+
+    // узлы Tor: медленно плавают по экрану, у каждого свой ритм
+    var lights = [];
+    for (var li = 0; li < 4; li++) {
+      lights.push({ ax: 0.000045 + li * 0.000013, ay: 0.000061 - li * 0.000009,
+                    px: Math.random() * 6.28, py: Math.random() * 6.28, x: 0, y: 0, flash: 0 });
     }
+    var packet = null, nextPacket = t0 + 2500;
 
     function resize() {
-      var dpr = Math.min(2, window.devicePixelRatio || 1);
-      var oldH = docH, oldVh = vh;
       vw = window.innerWidth; vh = window.innerHeight;
-      canvas.width = Math.round(vw * dpr); canvas.height = Math.round(vh * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      docH = document.documentElement.scrollHeight;
-      // узлы растягиваются вместе со своим слоем, чтобы не сбиваться в кучу
-      if (oldH) nodes.forEach(function (n) {
-        var before = oldVh + Math.max(0, oldH - oldVh) * n.par;
-        n.y *= layerH(n.par) / Math.max(before, 1);
-        if (n.x > vw) n.x = Math.random() * vw;
-      });
-      var count = Math.round(Math.min(2400, vw * layerH(0.65) / DENSITY));
-      while (nodes.length < count) nodes.push(makeNode());
-      nodes.length = count;
-      nodes.sort(function (a, b) { return a.z - b.z; }); // дальние рисуются первыми
-      measureZones();
+      canvas.width = Math.max(1, Math.round(vw * SCALE)); canvas.height = Math.max(1, Math.round(vh * SCALE));
+      gl.viewport(0, 0, canvas.width, canvas.height);
     }
+    // координаты экрана → пиксели холста (ось Y в WebGL снизу вверх)
+    function toGL(x, y) { return [x * SCALE, (vh - y) * SCALE]; }
+    function ease(x) { return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2; }
 
-    // 1 — свободное место, QUIET — под текстом, плавный переход на расстоянии FALLOFF
-    function openness(x, y, sz) {
-      var f = 1;
-      for (var i = 0; i < sz.length; i++) {
-        var z = sz[i];
-        var dx = Math.max(z.x1 - x, 0, x - z.x2), dy = Math.max(z.y1 - y, 0, y - z.y2);
-        if (dx > FALLOFF || dy > FALLOFF) continue;
-        var d = Math.sqrt(dx * dx + dy * dy);
-        if (d < FALLOFF) f = Math.min(f, QUIET + (1 - QUIET) * (d / FALLOFF));
+    function frame(now, animate) {
+      var t = (now - t0) / 1000, sy = window.scrollY, i;
+
+      // след курсора: каждый просвет живёт ~2.5 с и затягивается
+      for (i = 0; i < 24; i++) {
+        var pt = trail[i];
+        var s = 0;
+        if (pt) { var age = (now - pt.t) / 2600; s = age < 1 ? Math.pow(1 - age, 1.6) * Math.min(1, (now - pt.t) / 120 + 0.3) : 0; }
+        var c = pt ? toGL(pt.x, pt.y) : [-1e4, -1e4];
+        trailBuf[i * 3] = c[0]; trailBuf[i * 3 + 1] = c[1]; trailBuf[i * 3 + 2] = s * 0.55;
       }
-      return f;
-    }
 
-    // освещённость точки: блуждающие источники + немного от курсора
-    function lightAt(x, y) {
-      var best = 0, i, dx, dy, d2, k;
-      for (i = 0; i < lights.length; i++) {
-        dx = x - lights[i].x; dy = y - lights[i].y; d2 = dx * dx + dy * dy;
-        if (d2 < LIGHT_R * LIGHT_R) { k = 1 - Math.sqrt(d2) / LIGHT_R; k *= k; if (k > best) best = k; }
-      }
-      dx = x - mouse.cx; dy = y - mouse.cy; d2 = dx * dx + dy * dy;
-      if (d2 < MOUSE_R * MOUSE_R) { k = 1 - Math.sqrt(d2) / MOUSE_R; k = k * k * MOUSE_K; best = Math.min(1, best + k); }
-      return best;
-    }
-
-    function sdist(a, b) { var dx = a.sx - b.sx, dy = a.sy - b.sy; return Math.sqrt(dx * dx + dy * dy); }
-
-    function spawnPacket(visible, now) {
-      var pool = visible.filter(function (n) { return n.z > 0.35 && n.f > 0.55; });
-      if (pool.length < 4) return;
-      var path = [pool[Math.floor(Math.random() * pool.length)]];
-      var hops = 3 + (Math.random() < 0.5 ? 1 : 0); // guard → middle → exit (+ иногда ещё один)
-      for (var h = 0; h < hops; h++) {
-        var cur = path[path.length - 1];
-        var options = pool.filter(function (m) {
-          var d = sdist(cur, m);
-          return path.indexOf(m) < 0 && Math.abs(m.z - cur.z) < 0.34 && d < LINK * 1.2 && d > 50;
-        });
-        if (!options.length) break;
-        path.push(options[Math.floor(Math.random() * options.length)]);
-      }
-      if (path.length < 3) return;
-      path[0].flash = 1;
-      packets.push({ path: path, seg: 0, t: 0, trail: [], born: now, end: 0, speed: 2.4 + Math.random() * 1.6 });
-    }
-
-    function addPulse(x, y, now, k) {
-      pulses.push({ x: x, y: y, t0: now, r: 0, max: Math.hypot(vw, vh) * (0.45 + 0.3 * k), k: k });
-    }
-
-    function draw(now, animate) {
-      var sy = window.scrollY, dScroll = sy - lastSy;
-      lastSy = sy;
-      ctx.clearRect(0, 0, vw, vh);
-      if (now - lastZones > 1200) measureZones(); // раскрытые FAQ, смена языка и т. п.
-
-      // свет и сетка под курсором (CSS-слои), с инерцией
-      if (mouse.cx < -1000 || mouse.ex < -1000) { mouse.ex = mouse.cx; mouse.ey = mouse.cy; }
-      else { mouse.ex += (mouse.cx - mouse.ex) * 0.12; mouse.ey += (mouse.cy - mouse.ey) * 0.12; }
-      bg.style.setProperty('--cx', mouse.ex.toFixed(1) + 'px');
-      bg.style.setProperty('--cy', mouse.ey.toFixed(1) + 'px');
-      bg.style.setProperty('--gy', (-(sy * 0.18) % 72).toFixed(1) + 'px');
-
-      lights.forEach(function (l) {
-        l.x = vw * (0.5 + 0.46 * Math.sin(now * l.ax + l.px));
-        l.y = vh * (0.5 + 0.44 * Math.sin(now * l.ay + l.py));
+      lights.forEach(function (l, k) {
+        l.x = vw * (0.5 + 0.45 * Math.sin(now * l.ax + l.px));
+        l.y = vh * (0.5 + 0.42 * Math.sin(now * l.ay + l.py));
+        l.flash *= 0.97;
+        var c = toGL(l.x, l.y);
+        lightBuf[k * 3] = c[0]; lightBuf[k * 3 + 1] = c[1];
+        lightBuf[k * 3 + 2] = 0.55 + 0.15 * Math.sin(t * 0.5 + k * 1.7) + l.flash * 0.7;
       });
 
-      var sz = [], i, j, a, b, d, n;
-      for (i = 0; i < zones.length; i++) {
-        var zz = zones[i];
-        if (zz.y2 - sy > -LINK && zz.y1 - sy < vh + LINK) sz.push({ x1: zz.x1, y1: zz.y1 - sy, x2: zz.x2, y2: zz.y2 - sy });
-      }
-
-      // волны-сканеры
-      for (i = pulses.length - 1; i >= 0; i--) {
-        pulses[i].r = (now - pulses[i].t0) * PULSE_SPEED;
-        if (pulses[i].r > pulses[i].max) pulses.splice(i, 1);
-      }
-
-      var visible = [], m = { x: mouse.cx, y: mouse.cy };
-      for (i = 0; i < nodes.length; i++) {
-        n = nodes[i];
-        var lh = layerH(n.par);
-        if (animate) {
-          n.x += n.vx; n.y += n.vy;
-          if (n.x < -20) n.x = vw + 20; else if (n.x > vw + 20) n.x = -20;
-          if (n.y < -20) n.y = lh + 20; else if (n.y > lh + 20) n.y = -20;
-          n.flash *= 0.955; n.lit *= 0.94;
-        }
-        var bx = n.x, by = n.y - sy * n.par;
-        if (by < -LINK || by > vh + LINK) continue;
-        // лёгкая линза у курсора
-        var tx = 0, ty = 0, dx = bx - m.x, dy = by - m.y, d2 = dx * dx + dy * dy;
-        if (d2 < WARP_R * WARP_R && d2 > 1) {
-          d = Math.sqrt(d2);
-          var k = 1 - d / WARP_R; k = k * k * WARP * (0.3 + n.z);
-          tx = dx / d * k; ty = dy / d * k;
-        }
-        n.ox += (tx - n.ox) * 0.1; n.oy += (ty - n.oy) * 0.1;
-        n.sx = bx + n.ox; n.sy = by + n.oy;
-        for (j = 0; j < pulses.length; j++) {
-          var p0 = pulses[j], pd = Math.abs(Math.hypot(n.sx - p0.x, n.sy - p0.y) - p0.r);
-          if (pd < PULSE_BAND) n.lit = Math.max(n.lit, (1 - pd / PULSE_BAND) * (1 - p0.r / p0.max) * p0.k);
-        }
-        n.light = lightAt(n.sx, n.sy);
-        n.f = openness(n.sx, n.sy, sz);
-        visible.push(n);
-      }
-
-      // ореолы блуждающих источников
-      ctx.globalCompositeOperation = 'lighter';
-      lights.forEach(function (l) {
-        ctx.globalAlpha = 0.16;
-        ctx.drawImage(GLOW_LILAC, l.x - LIGHT_R * 1.3, l.y - LIGHT_R * 1.3, LIGHT_R * 2.6, LIGHT_R * 2.6);
-      });
-      ctx.globalCompositeOperation = 'source-over';
-
-      // кольца волн: широкий мягкий ореол + тонкий фронт
-      pulses.forEach(function (p) {
-        var fade = 1 - p.r / p.max;
-        ctx.strokeStyle = KIT.nodeHot;
-        ctx.lineWidth = 10; ctx.globalAlpha = 0.035 * fade * p.k;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.stroke();
-        ctx.lineWidth = 1.2; ctx.globalAlpha = 0.28 * fade * p.k;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.stroke();
-        if (p.r > 22) {
-          ctx.lineWidth = 1; ctx.globalAlpha = 0.09 * fade * p.k;
-          ctx.beginPath(); ctx.arc(p.x, p.y, p.r - 22, 0, Math.PI * 2); ctx.stroke();
-        }
-      });
-
-      // связи — только между узлами близкой глубины
-      for (i = 0; i < visible.length; i++) {
-        a = visible[i];
-        for (j = i + 1; j < visible.length; j++) {
-          b = visible[j];
-          if (b.z - a.z > 0.34) break; // массив отсортирован по глубине
-          var zm = (a.z + b.z) / 2, L = LINK * (0.65 + 0.45 * zm);
-          if (Math.abs(a.sy - b.sy) >= L || Math.abs(a.sx - b.sx) >= L) continue;
-          d = sdist(a, b);
-          if (d >= L) continue;
-          var f = Math.min(a.f, b.f), near = 1 - d / L;
-          var lit = Math.min(a.lit, b.lit), lv = (a.light + b.light) / 2;
-          var lvl = Math.max(lit, lv) + zm * 0.15;
-          ctx.lineWidth = 0.5 + zm * 0.8 + lit * 0.6;
-          ctx.strokeStyle = lit > 0.25 ? KIT.progress : lvl > 0.45 ? KIT.nodeHot : lvl > 0.18 ? KIT.edgeHot : KIT.edge;
-          ctx.globalAlpha = Math.min(1, near * (0.3 + 0.7 * zm) * (1 + lv * 1.4) + lit * near * 0.8) * f;
-          ctx.beginPath(); ctx.moveTo(a.sx, a.sy); ctx.lineTo(b.sx, b.sy); ctx.stroke();
-        }
-      }
-
-      // узлы: мерцание + свет источников
-      ctx.lineWidth = 1.5;
-      visible.forEach(function (n) {
-        var tw = 0.7 + 0.3 * Math.sin(now * 0.0015 * n.ts + n.tw);
-        var lv = Math.max(n.light, n.lit);
-        if (n.z > 0.86) { // ближний слой — мягкое боке
-          ctx.globalAlpha = (0.14 + n.light * 0.2) * n.f;
-          ctx.drawImage(GLOW_LILAC, n.sx - 16, n.sy - 16, 32, 32);
-        }
-        ctx.globalAlpha = Math.min(1, (0.35 + 0.6 * n.z) * tw + lv * 0.7) * n.f;
-        ctx.fillStyle = lv > 0.5 ? KIT.progress : lv > 0.15 ? KIT.nodeHot : KIT.node;
-        ctx.beginPath(); ctx.arc(n.sx, n.sy, n.r + lv * 1.1, 0, Math.PI * 2); ctx.fill();
-        if (n.flash > 0.03) {
-          ctx.globalAlpha = n.flash * 0.9 * n.f;
-          ctx.strokeStyle = KIT.green;
-          ctx.beginPath(); ctx.arc(n.sx, n.sy, n.r + (1 - n.flash) * 36, 0, Math.PI * 2); ctx.stroke();
-        }
-      });
-
-      // свечение: узлы под волной и светом, вспышки хопов
-      ctx.globalCompositeOperation = 'lighter';
-      visible.forEach(function (n) {
-        var lv = Math.max(n.lit, n.light * 0.7);
-        if (lv > 0.2 && n.z > 0.3) {
-          var s = 8 + 18 * n.z * lv;
-          ctx.globalAlpha = lv * 0.6 * n.f;
-          ctx.drawImage(GLOW_WHITE, n.sx - s, n.sy - s, s * 2, s * 2);
-        }
-        if (n.flash > 0.1) {
-          var g = 10 + 26 * n.flash;
-          ctx.globalAlpha = n.flash * 0.7 * n.f;
-          ctx.drawImage(GLOW_GREEN, n.sx - g, n.sy - g, g * 2, g * 2);
-        }
-      });
-      ctx.globalCompositeOperation = 'source-over';
-
-      // Tor-цепочки
-      for (i = packets.length - 1; i >= 0; i--) {
-        var p = packets[i], path = p.path, last = path.length - 1;
-        if (path.some(function (q) { return q.sy < -LINK * 1.5 || q.sy > vh + LINK * 1.5; })) { packets.splice(i, 1); continue; }
-        var fadeIn = Math.min(1, (now - p.born) / 300);
-        var fadeOut = p.end ? 1 - (now - p.end) / 900 : 1;
-        if (fadeOut <= 0) { packets.splice(i, 1); continue; }
-        var pf = Math.max(0.35, Math.min(path[0].f, path[last].f, path[Math.min(p.seg + 1, last)].f)) * fadeIn * fadeOut;
-
-        // сама цепочка: пройденные хопы ярче
-        ctx.lineWidth = 1.2;
-        ctx.strokeStyle = KIT.green;
-        for (j = 0; j < last; j++) {
-          ctx.globalAlpha = (j < p.seg || p.end ? 0.55 : j === p.seg ? 0.32 : 0.12) * pf;
-          ctx.beginPath(); ctx.moveTo(path[j].sx, path[j].sy); ctx.lineTo(path[j + 1].sx, path[j + 1].sy); ctx.stroke();
-        }
-
-        a = path[p.seg]; b = path[Math.min(p.seg + 1, last)];
-        if (animate && !p.end) {
-          p.t += p.speed / Math.max(sdist(a, b), 1);
-          if (p.t >= 1) {
-            b.flash = 1; b.lit = Math.max(b.lit, 0.5); p.seg++; p.t = 0;
-            if (p.seg >= last) { p.end = now; p.seg = last; b.lit = 1; addPulse(b.sx, b.sy, now, 0.35); }
-            a = path[p.seg]; b = path[Math.min(p.seg + 1, last)];
-          }
-        }
-        var x = a.sx + (b.sx - a.sx) * p.t, y = a.sy + (b.sy - a.sy) * p.t;
-        for (j = 0; j < p.trail.length; j++) p.trail[j][1] -= dScroll * a.par; // след едет вместе со слоем при прокрутке
-        if (!p.end) { p.trail.push([x, y]); if (p.trail.length > 30) p.trail.shift(); }
-        else if (p.trail.length) p.trail.splice(0, 2);
-
-        ctx.globalCompositeOperation = 'lighter';
-        ctx.lineWidth = 2.2;
-        for (j = 1; j < p.trail.length; j++) {
-          ctx.globalAlpha = Math.pow(j / p.trail.length, 1.5) * 0.9 * pf;
-          ctx.beginPath(); ctx.moveTo(p.trail[j - 1][0], p.trail[j - 1][1]); ctx.lineTo(p.trail[j][0], p.trail[j][1]); ctx.stroke();
-        }
-        if (!p.end) {
-          ctx.globalAlpha = pf;
-          ctx.drawImage(GLOW_GREEN, x - 22, y - 22, 44, 44);
-          ctx.fillStyle = KIT.greenLight;
-          ctx.beginPath(); ctx.arc(x, y, 2.4, 0, Math.PI * 2); ctx.fill();
-        }
-        ctx.globalCompositeOperation = 'source-over';
-      }
-
+      // импульс: проходит три хопа и гаснет; следующий — через несколько секунд
+      var pk = [-1e4, -1e4, 0];
       if (animate) {
-        // частота цепочек растёт с площадью экрана
-        var maxPackets = Math.max(4, Math.round(vw * vh / 85000));
-        if (now - lastSpawn > 260 && packets.length < maxPackets) { spawnPacket(visible, now); lastSpawn = now; }
-        if (now > nextPulse) { // волна из-под одного из источников света или из свободного места
-          if (Math.random() < 0.5) { var l = lights[Math.floor(Math.random() * lights.length)]; addPulse(l.x, l.y, now, 1); }
-          else {
-            var open = visible.filter(function (q) { return q.f > 0.9 && q.z > 0.5; });
-            if (open.length) { var src = open[Math.floor(Math.random() * open.length)]; addPulse(src.sx, src.sy, now, 1); }
+        if (!packet && now > nextPacket) {
+          var order = [0, 1, 2, 3].sort(function () { return Math.random() - 0.5; });
+          packet = { path: order.slice(0, 3), seg: 0, start: now };
+          lights[packet.path[0]].flash = 1;
+        }
+        if (packet) {
+          var a = lights[packet.path[packet.seg]], b = lights[packet.path[packet.seg + 1]];
+          var dur = Math.max(900, Math.hypot(b.x - a.x, b.y - a.y) * 2.4);
+          var k2 = (now - packet.start) / dur;
+          if (k2 >= 1) {
+            b.flash = 1; packet.seg++; packet.start = now;
+            if (packet.seg >= packet.path.length - 1) { packet = null; nextPacket = now + 4500 + Math.random() * 4000; }
+          } else {
+            var e = ease(k2), c2 = toGL(a.x + (b.x - a.x) * e, a.y + (b.y - a.y) * e);
+            pk = [c2[0], c2[1], Math.sin(Math.PI * Math.min(1, k2 * 1.15)) * 0.6 + 0.4];
           }
-          nextPulse = now + 2600 + Math.random() * 2200;
         }
       }
-      ctx.globalAlpha = 1;
+
+      gl.uniform2f(U.uRes, canvas.width, canvas.height);
+      gl.uniform1f(U.uTime, t);
+      gl.uniform1f(U.uScroll, sy / vh * 0.35);
+      gl.uniform1f(U.uScrollPx, sy * 0.5 * SCALE);
+      gl.uniform1f(U.uDensity, 1 - 0.22 * Math.min(1, sy / (vh * 1.5))); // в hero дымка гуще
+      gl.uniform1f(U.uClearR, 120 * SCALE);
+      gl.uniform3fv(U.uTrail, trailBuf);
+      gl.uniform3fv(U.uLights, lightBuf);
+      gl.uniform3f(U.uPacket, pk[0], pk[1], pk[2]);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
     }
 
-    function loop(now) { draw(now, true); raf = requestAnimationFrame(loop); }
+    var lastGlyphs = 0, lastDraw = 0;
+    function loop(now) {
+      raf = requestAnimationFrame(loop);
+      // туман медленный: 30 кадров в секунду хватает, а видеокарта остаётся свободной для прокрутки
+      if (now - lastDraw < 30) return;
+      lastDraw = now;
+      if (now - lastGlyphs > 450) { // шифротекст понемногу «перешифровывается»
+        for (var i = 0; i < 40; i++) {
+          var n = Math.floor(Math.random() * cells.length);
+          cells[n] = Math.random() < 0.55 ? HEX.charAt(Math.floor(Math.random() * 16)) : ' ';
+        }
+        paintGlyphs(); lastGlyphs = now;
+      }
+      frame(now, true);
+    }
     function start() { if (!raf && !document.hidden) raf = requestAnimationFrame(loop); }
     function stop() { cancelAnimationFrame(raf); raf = 0; }
 
     resize();
     window.addEventListener('resize', resize);
-    if ('ResizeObserver' in window) {
-      new ResizeObserver(function () {
-        if (Math.abs(document.documentElement.scrollHeight - docH) > 40) resize();
-      }).observe(document.body);
+
+    // ?fogdebug=1 — красная рамка вокруг холста и размеры окна/холста (временная диагностика)
+    if (/[?&]fogdebug=1(&|$)/.test(location.search)) {
+      canvas.style.outline = '3px solid red'; canvas.style.outlineOffset = '-3px';
+      var dbg = document.createElement('pre');
+      dbg.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:9999;margin:0;padding:8px;font:12px/1.4 monospace;color:#fff;background:rgba(200,0,0,.85);pointer-events:none';
+      document.body.appendChild(dbg);
+      var report = function () {
+        var r = canvas.getBoundingClientRect(), br = bg.getBoundingClientRect(), vv = window.visualViewport;
+        var ri = gl.getExtension('WEBGL_debug_renderer_info');
+        dbg.textContent = [
+          'inner ' + innerWidth + 'x' + innerHeight + ' | client ' + document.documentElement.clientWidth + 'x' + document.documentElement.clientHeight +
+            (vv ? ' | vv ' + Math.round(vv.width) + 'x' + Math.round(vv.height) + ' @' + vv.scale : '') + ' | dpr ' + devicePixelRatio,
+          'bg ' + Math.round(br.top) + '..' + Math.round(br.bottom) + ' | canvas ' + Math.round(r.top) + '..' + Math.round(r.bottom) +
+            ' | buffer ' + canvas.width + 'x' + canvas.height + ' | drawing ' + gl.drawingBufferWidth + 'x' + gl.drawingBufferHeight,
+          ri ? gl.getParameter(ri.UNMASKED_RENDERER_WEBGL) : '',
+          navigator.userAgent
+        ].join('\n');
+      };
+      report(); setInterval(report, 1000);
     }
 
-    if (reduce) { // статичная картинка, перерисовываем только при прокрутке
+    if (reduce) { // неподвижная дымка, перерисовываем только при прокрутке и ресайзе
       var pending = false;
-      var still = function () { pending = false; draw(performance.now(), false); };
+      var still = function () { pending = false; frame(t0 + 20000, false); };
       window.addEventListener('scroll', function () { if (!pending) { pending = true; requestAnimationFrame(still); } }, { passive: true });
       window.addEventListener('resize', still);
       still();
       return;
     }
 
-    window.addEventListener('pointermove', function (e) { mouse.cx = e.clientX; mouse.cy = e.clientY; }, { passive: true });
-    document.addEventListener('pointerleave', function () { mouse.cx = mouse.cy = -1e4; });
-    // клик по пустому месту запускает небольшую волну
-    document.addEventListener('pointerdown', function (e) {
-      if (e.button !== 0 || (e.target.closest && e.target.closest(NO_PULSE))) return;
-      addPulse(e.clientX, e.clientY, performance.now(), 0.6);
-    });
+    window.addEventListener('pointermove', function (e) {
+      var now = performance.now();
+      var dx = e.clientX - mouse.lastX, dy = e.clientY - mouse.lastY;
+      if (dx * dx + dy * dy < 196 && now - mouse.lastT < 80) return; // точки следа не чаще ~14 px / 80 мс
+      mouse.lastX = e.clientX; mouse.lastY = e.clientY; mouse.lastT = now;
+      trail.push({ x: e.clientX, y: e.clientY, t: now });
+      if (trail.length > 24) trail.shift();
+    }, { passive: true });
     document.addEventListener('visibilitychange', function () { if (document.hidden) stop(); else start(); });
-    nextPulse = performance.now() + 700;
     start();
   }
 
@@ -517,7 +388,7 @@
     onReveal: function (el) { if (el.classList.contains('eyebrow')) scramble(el, 700); }
   };
 
-  pageNetwork();
+  if (!/[?&]fog=0(&|$)/.test(location.search)) pageFog(); // ?fog=0 — отключить туман для диагностики
   heroParallax();
   spotlight('.features', '.feature');
   spotlight('.rm-cards', '.rm-card');
