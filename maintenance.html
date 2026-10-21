@@ -14,11 +14,10 @@
   <style>
     /* Заглушка «сайт обновляется». Цвета — токены UI-кита DexTor (см. css/styles.css :root) */
     :root {
-      --bg: #0E0F13; --card: #16151E; --border-card: #2C2A3A; --border-field: #3B384B;
-      --text: #F2F2F5; --text-2: #A6A6BC; --text-3: #6A6A7A; --progress: #E7E7EC;
+      --bg: #0E0F13; --card: #16151E; --border-card: #2C2A3A;
+      --text: #F2F2F5; --text-2: #A6A6BC; --text-3: #6A6A7A;
       --lilac-glow: rgba(214, 196, 255, 0.06);
       --font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-      --ease: cubic-bezier(.2, .7, .2, 1);
     }
     *, *::before, *::after { box-sizing: border-box; }
     html, body { height: 100%; }
@@ -57,28 +56,14 @@
       border: 1px solid var(--border-card); border-radius: 999px; background: var(--card);
       font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2);
     }
-    .spin {
-      width: 14px; height: 14px; border-radius: 50%;
-      border: 2px solid var(--border-field); border-top-color: var(--progress);
-      animation: spin 900ms linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-2); }
     h1 {
       margin: 28px 0 0; font-size: clamp(40px, 7vw, 72px); line-height: 1.02; font-weight: 600; letter-spacing: -0.04em;
     }
     .lead { margin: 24px auto 0; max-width: 520px; font-size: clamp(17px, 1.6vw, 19px); line-height: 1.55; color: var(--text-2); }
 
-    /* Бесконечная полоса прогресса */
-    .bar { position: relative; width: 220px; height: 2px; margin: 48px auto 0; border-radius: 2px; background: var(--border-card); overflow: hidden; }
-    .bar i { position: absolute; top: 0; bottom: 0; left: 0; width: 40%; border-radius: 2px; background: var(--progress); animation: run 1.8s var(--ease) infinite; }
-    @keyframes run { from { transform: translateX(-110%); } to { transform: translateX(260%); } }
-
     footer { padding: 24px; text-align: center; font-size: 13px; color: var(--text-3); }
 
-    @media (prefers-reduced-motion: reduce) {
-      .spin, .bar i { animation: none; }
-      .bar i { width: 100%; opacity: .35; }
-    }
     @media (max-width: 640px) {
       .top { padding: 16px; }
       .logo img { height: 26px; }
@@ -97,10 +82,9 @@
 
   <main>
     <div class="box">
-      <span class="status"><span class="spin" aria-hidden="true"></span><span data-t="status">Update in progress</span></span>
+      <span class="status"><span class="dot" aria-hidden="true"></span><span data-t="status">Update in progress</span></span>
       <h1 data-t="title">We’re updating the&nbsp;site.</h1>
       <p class="lead" data-t="lead">The DexTor OS website is getting a fresh version. We’ll be back shortly — thanks for your patience.</p>
-      <div class="bar" role="progressbar" aria-label="Updating"><i></i></div>
     </div>
   </main>
 
@@ -123,19 +107,19 @@
           doc: 'DexTor OS — сайт на обновлении'
         }
       };
-      function apply(lang) {
+      function apply(lang, remember) {
         var t = T[lang] || T.en;
         document.documentElement.lang = lang;
         document.title = t.doc;
         document.querySelectorAll('[data-t]').forEach(function (el) { el.innerHTML = t[el.getAttribute('data-t')]; });
         document.querySelectorAll('.lang button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.lang === lang)); });
-        try { localStorage.setItem(KEY, lang); } catch (e) {}
+        if (remember) try { localStorage.setItem(KEY, lang); } catch (e) {} // запоминаем только явный выбор
       }
       var saved = null;
       try { saved = localStorage.getItem(KEY); } catch (e) {}
-      apply(saved || (/^ru/i.test(navigator.language || '') ? 'ru' : 'en'));
+      apply(saved === 'ru' ? 'ru' : 'en'); // по умолчанию — английский, как на основном сайте
       document.querySelectorAll('.lang button').forEach(function (b) {
-        b.addEventListener('click', function () { apply(b.dataset.lang); });
+        b.addEventListener('click', function () { apply(b.dataset.lang, true); });
       });
     })();
   </script>
