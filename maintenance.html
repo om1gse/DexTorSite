@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DexTor OS — site update in progress</title>
+  <meta name="description" content="The DexTor OS website is being updated. We’ll be back shortly.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0E0F13">
+  <link rel="icon" href="assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap&subset=cyrillic" rel="stylesheet">
+  <style>
+    /* Заглушка «сайт обновляется». Цвета — токены UI-кита DexTor (см. css/styles.css :root) */
+    :root {
+      --bg: #0E0F13; --card: #16151E; --border-card: #2C2A3A; --border-field: #3B384B;
+      --text: #F2F2F5; --text-2: #A6A6BC; --text-3: #6A6A7A; --progress: #E7E7EC;
+      --lilac-glow: rgba(214, 196, 255, 0.06);
+      --font: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --ease: cubic-bezier(.2, .7, .2, 1);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; min-height: 100%; display: flex; flex-direction: column;
+      color: var(--text); font: 400 16px/1.5 var(--font);
+      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+      background:
+        radial-gradient(60vmax 45vmax at 18% 8%, var(--lilac-glow), transparent 70%),
+        radial-gradient(55vmax 40vmax at 88% 92%, var(--lilac-glow), transparent 70%),
+        var(--bg);
+    }
+    button { font: inherit; color: inherit; }
+    :focus-visible { outline: 2px solid #C4C4D4; outline-offset: 3px; border-radius: 4px; }
+
+    .top {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      width: 100%; max-width: 1248px; margin: 0 auto; padding: 20px 24px;
+    }
+    .logo img { display: block; height: 30px; width: auto; }
+
+    .lang { display: inline-flex; padding: 3px; gap: 2px; border: 1px solid var(--border-card); border-radius: 8px; background: var(--card); }
+    .lang button {
+      height: 28px; min-width: 36px; padding: 0 8px; border: 0; border-radius: 6px; background: transparent;
+      font-size: 12px; font-weight: 600; letter-spacing: .06em; color: var(--text-3); cursor: pointer;
+    }
+    .lang button[aria-pressed="true"] { background: #272436; color: var(--text); }
+
+    main {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 48px 24px 96px; text-align: center;
+    }
+    .box { max-width: 640px; }
+    .status {
+      display: inline-flex; align-items: center; gap: 10px; height: 32px; padding: 0 14px 0 10px;
+      border: 1px solid var(--border-card); border-radius: 999px; background: var(--card);
+      font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2);
+    }
+    .spin {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid var(--border-field); border-top-color: var(--progress);
+      animation: spin 900ms linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    h1 {
+      margin: 28px 0 0; font-size: clamp(40px, 7vw, 72px); line-height: 1.02; font-weight: 600; letter-spacing: -0.04em;
+    }
+    .lead { margin: 24px auto 0; max-width: 520px; font-size: clamp(17px, 1.6vw, 19px); line-height: 1.55; color: var(--text-2); }
+
+    /* Бесконечная полоса прогресса */
+    .bar { position: relative; width: 220px; height: 2px; margin: 48px auto 0; border-radius: 2px; background: var(--border-card); overflow: hidden; }
+    .bar i { position: absolute; top: 0; bottom: 0; left: 0; width: 40%; border-radius: 2px; background: var(--progress); animation: run 1.8s var(--ease) infinite; }
+    @keyframes run { from { transform: translateX(-110%); } to { transform: translateX(260%); } }
+
+    footer { padding: 24px; text-align: center; font-size: 13px; color: var(--text-3); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .spin, .bar i { animation: none; }
+      .bar i { width: 100%; opacity: .35; }
+    }
+    @media (max-width: 640px) {
+      .top { padding: 16px; }
+      .logo img { height: 26px; }
+      main { padding: 32px 16px 72px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <span class="logo"><img src="assets/logo.png" alt="DexTor OS" width="216" height="47"></span>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en" aria-pressed="true">EN</button>
+      <button type="button" data-lang="ru" aria-pressed="false">RU</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="box">
+      <span class="status"><span class="spin" aria-hidden="true"></span><span data-t="status">Update in progress</span></span>
+      <h1 data-t="title">We’re updating the&nbsp;site.</h1>
+      <p class="lead" data-t="lead">The DexTor OS website is getting a fresh version. We’ll be back shortly — thanks for your patience.</p>
+      <div class="bar" role="progressbar" aria-label="Updating"><i></i></div>
+    </div>
+  </main>
+
+  <footer>© 2026 DexTor OS</footer>
+
+  <script>
+    (function () {
+      var KEY = 'dextor-lang-v2'; // тот же ключ, что в js/main.js
+      var T = {
+        en: {
+          status: 'Update in progress',
+          title: 'We’re updating the&nbsp;site.',
+          lead: 'The DexTor OS website is getting a fresh version. We’ll be back shortly — thanks for your patience.',
+          doc: 'DexTor OS — site update in progress'
+        },
+        ru: {
+          status: 'Идёт обновление',
+          title: 'Сайт на&nbsp;обновлении.',
+          lead: 'Мы готовим новую версию сайта DexTor OS. Скоро вернёмся — спасибо за терпение.',
+          doc: 'DexTor OS — сайт на обновлении'
+        }
+      };
+      function apply(lang) {
+        var t = T[lang] || T.en;
+        document.documentElement.lang = lang;
+        document.title = t.doc;
+        document.querySelectorAll('[data-t]').forEach(function (el) { el.innerHTML = t[el.getAttribute('data-t')]; });
+        document.querySelectorAll('.lang button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.lang === lang)); });
+        try { localStorage.setItem(KEY, lang); } catch (e) {}
+      }
+      var saved = null;
+      try { saved = localStorage.getItem(KEY); } catch (e) {}
+      apply(saved || (/^ru/i.test(navigator.language || '') ? 'ru' : 'en'));
+      document.querySelectorAll('.lang button').forEach(function (b) {
+        b.addEventListener('click', function () { apply(b.dataset.lang); });
+      });
+    })();
+  </script>
+</body>
+</html>

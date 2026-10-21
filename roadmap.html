@@ -3,6 +3,13 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Режим обслуживания: сайт закрыт заглушкой. Чтобы открыть сайт — удалите этот скрипт.
+       Посмотреть настоящий сайт во время обновления: добавьте ?preview к адресу (действует до закрытия вкладки). -->
+  <script>(function () {
+    var preview = /[?&]preview(=|&|$)/.test(location.search);
+    try { if (preview) sessionStorage.setItem('dextor-preview', '1'); preview = preview || sessionStorage.getItem('dextor-preview') === '1'; } catch (e) {}
+    if (!preview) location.replace('maintenance.html');
+  })();</script>
   <title>Roadmap — DexTor OS</title>
   <meta name="description" content="DexTor OS roadmap: six phases and 28 milestones — from the security core and DEX to mobile, payments and an enterprise edition.">
   <meta name="theme-color" content="#0E0F13">
